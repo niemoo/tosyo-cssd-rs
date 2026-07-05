@@ -1,5 +1,5 @@
 <header
-    class="flex h-14 shrink-0 items-center gap-3 border-b border-gray-100 bg-white px-4 sm:h-[60px] sm:gap-4 sm:px-6">
+    class="flex h-14 shrink-0 items-center gap-3 border-b border-gray-300 bg-white px-4 sm:h-[60px] sm:gap-4 sm:px-6">
 
     {{-- Hamburger (mobile only) --}}
     <button @click="sidebarOpen = true"

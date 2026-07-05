@@ -106,9 +106,14 @@ class ConsumableController extends Controller
         ))->with('units', self::UNITS);
     }
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
         $userHospitals = auth()->user()->hospitals()->wherePivot('is_active', true)->get();
+
+        if ($userHospitals->isEmpty()) {
+            return redirect()->route('consumables.index')
+                             ->with('error', 'Anda tidak terdaftar di rumah sakit aktif manapun. Hubungi administrator.');
+        }
 
         $categories = ConsumableCategory::where('hospital_id', session('active_hospital_id'))
                                         ->where('is_active', true)

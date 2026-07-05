@@ -95,9 +95,14 @@ class SterilizeController extends Controller
         ))->with('types', self::TYPES);
     }
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
         $userHospitals = auth()->user()->hospitals()->wherePivot('is_active', true)->get();
+
+        if ($userHospitals->isEmpty()) {
+            return redirect()->route('sterilizers.index')
+                             ->with('error', 'Anda tidak terdaftar di rumah sakit aktif manapun. Hubungi administrator.');
+        }
 
         return view('sterilizers.create', compact('userHospitals'))
                ->with('types', self::TYPES);

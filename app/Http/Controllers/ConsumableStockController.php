@@ -147,9 +147,14 @@ class ConsumableStockController extends Controller
         ));
     }
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
         $userHospitals = auth()->user()->hospitals()->wherePivot('is_active', true)->get();
+
+        if ($userHospitals->isEmpty()) {
+            return redirect()->route('consumable-stocks.index')
+                             ->with('error', 'Anda tidak terdaftar di rumah sakit aktif manapun. Hubungi administrator.');
+        }
 
         $consumables = Consumable::where('hospital_id', session('active_hospital_id'))
                                  ->where('is_active', true)

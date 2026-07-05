@@ -87,9 +87,15 @@ class UnitController extends Controller
         ));
     }
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
         $userHospitals = auth()->user()->hospitals()->wherePivot('is_active', true)->get();
+
+        if ($userHospitals->isEmpty()) {
+            return redirect()->route('units.index')
+                             ->with('error', 'Anda tidak terdaftar di rumah sakit aktif manapun. Hubungi administrator.');
+        }
+
         $types = ['IGD', 'ICU', 'ICCU', 'PICU', 'NICU', 'Bedah', 'Rawat Inap', 'Rawat Jalan', 'Laboratorium', 'Radiologi', 'Farmasi', 'Lainnya'];
 
         return view('units.create', compact('userHospitals', 'types'));
