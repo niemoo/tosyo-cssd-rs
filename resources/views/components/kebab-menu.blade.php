@@ -50,7 +50,7 @@ window.addEventListener('scroll', closeOnScroll, { passive: true });" @click.out
             x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
             x-transition:leave-end="opacity-0 scale-95"
             :style="`position: fixed; top: ${pos.top}px; right: ${pos.right}px; z-index: 9999;`"
-            class="w-44 rounded-xl border border-gray-100 bg-white py-1 shadow-lg" style="display: none;" x-cloak>
+            class="w-44 rounded-xl border border-gray-200 bg-white py-1 shadow-lg" style="display: none;" x-cloak>
             {{ $slot }}
         </div>
     </template>

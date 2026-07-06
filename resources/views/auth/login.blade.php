@@ -16,7 +16,7 @@
     </div>
 
     <div class="relative z-10 w-full max-w-sm px-4">
-        <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
+        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
 
             {{-- Header --}}
             <div class="bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 px-9 pt-8 pb-7">

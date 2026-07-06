@@ -27,7 +27,7 @@
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
             <div class="space-y-4 lg:col-span-2">
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center gap-2.5 border-b border-gray-50 px-5 py-3.5">
                         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
                             <svg class="h-3.5 w-3.5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2"
@@ -62,7 +62,7 @@
                             @else
                                 <input type="hidden" name="hospital_id" value="{{ $userHospitals->first()->id }}" />
                                 <input type="text" value="{{ $userHospitals->first()->name }}" disabled
-                                    class="w-full cursor-not-allowed rounded-lg border border-gray-100 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
+                                    class="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
                                 <p class="mt-1 text-[10px] text-gray-400">Otomatis terpilih sesuai akses Anda</p>
                             @endif
                             @error('hospital_id')
@@ -172,7 +172,7 @@
 
             <div class="space-y-4">
 
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center gap-2.5 border-b border-gray-50 px-5 py-3.5">
                         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-50">
                             <svg class="h-3.5 w-3.5 text-primary-500" fill="none" stroke="currentColor"
@@ -185,7 +185,7 @@
                     </div>
                     <div class="p-5">
                         <div
-                            class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3.5">
+                            class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3.5">
                             <div>
                                 <div class="text-sm font-medium text-gray-900">Instrumen Aktif</div>
                                 <div class="text-xs text-gray-400">Dapat digunakan dalam sistem</div>

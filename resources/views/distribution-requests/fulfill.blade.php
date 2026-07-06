@@ -55,7 +55,7 @@
 
             <div class="space-y-4 lg:col-span-2">
 
-                <div class="rounded-xl border border-gray-100 bg-white">
+                <div class="rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center gap-2.5 border-b border-gray-50 px-5 py-3.5">
                         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
                             <svg class="h-3.5 w-3.5 text-amber-600" fill="none" stroke="currentColor"
@@ -104,7 +104,7 @@
                                     $assignIndex++;
                                 @endphp
                                 {{-- Item belum ter-assign --}}
-                                <div class="relative rounded-lg border border-gray-100 p-4" x-data="{
+                                <div class="relative rounded-lg border border-gray-200 p-4" x-data="{
                                     open: false,
                                     search: '',
                                     selectedId: '{{ $oldSelectedId }}',
@@ -177,11 +177,11 @@
                                             x-transition:enter-start="opacity-0 scale-95"
                                             x-transition:enter-end="opacity-100 scale-100"
                                             :style="`position: fixed; top: ${pos.top}px; left: ${pos.left}px; width: ${pos.width}px; z-index: 9999;`"
-                                            class="rounded-xl border border-gray-100 bg-white shadow-lg"
+                                            class="rounded-xl border border-gray-200 bg-white shadow-lg"
                                             style="display: none;" x-cloak>
                                             <div class="border-b border-gray-50 p-2">
                                                 <div
-                                                    class="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                                                    class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
                                                     <svg class="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none"
                                                         stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                         <circle cx="11" cy="11" r="8" />

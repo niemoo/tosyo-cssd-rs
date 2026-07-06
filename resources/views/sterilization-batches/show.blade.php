@@ -44,7 +44,7 @@
         <div class="space-y-4 lg:col-span-2">
 
             {{-- Info Batch --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div class="border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Informasi Batch</h3>
                 </div>
@@ -63,7 +63,7 @@
             </div>
 
             {{-- Parameter --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div class="border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Parameter Sterilisasi</h3>
                 </div>
@@ -86,7 +86,7 @@
             </div>
 
             {{-- Hasil per Tray --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div class="flex items-center justify-between border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Hasil Sterilisasi per Tray</h3>
                     <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-600">
@@ -119,7 +119,7 @@
                             </div>
 
                             @foreach ($sterilizationBatch->items as $i => $batchItem)
-                                <div class="rounded-lg border border-gray-100 p-4" x-data="{ result: '{{ $batchItem->result }}' }">
+                                <div class="rounded-lg border border-gray-200 p-4" x-data="{ result: '{{ $batchItem->result }}' }">
                                     <input type="hidden" name="results[{{ $i }}][tray_id]"
                                         value="{{ $batchItem->tray_id }}" />
 
@@ -211,7 +211,7 @@
             </div>
 
             {{-- Pemakaian Consumable --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white" x-data="{ open: {{ $errors->has('quantity') ? 'true' : 'false' }} }">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white" x-data="{ open: {{ $errors->has('quantity') ? 'true' : 'false' }} }">
                 <div class="flex items-center justify-between border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Pemakaian Consumable</h3>
                     <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-600">
@@ -301,7 +301,7 @@
         </div>
 
         <div class="space-y-4">
-            <div class="rounded-xl border border-gray-100 bg-white p-5">
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
                 <h4 class="mb-4 text-[11px] font-bold uppercase tracking-wider text-gray-400">Audit Trail</h4>
                 <div class="space-y-3">
                     @foreach ([['label' => 'Dibuat oleh', 'value' => $sterilizationBatch->creator?->name ?? '-'], ['label' => 'Dibuat pada', 'value' => $sterilizationBatch->created_at->format('d M Y, H:i')], ['label' => 'Diperbarui oleh', 'value' => $sterilizationBatch->updater?->name ?? '-'], ['label' => 'Diperbarui pada', 'value' => $sterilizationBatch->updated_at->format('d M Y, H:i')]] as $audit)

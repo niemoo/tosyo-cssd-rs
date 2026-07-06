@@ -30,7 +30,7 @@
             <div class="space-y-4 lg:col-span-2">
 
                 {{-- Nama Role --}}
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center gap-2.5 border-b border-gray-50 px-5 py-3.5">
                         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100">
                             <svg class="h-3.5 w-3.5 text-purple-600" fill="none" stroke="currentColor"
@@ -57,7 +57,7 @@
                 </div>
 
                 {{-- Permissions --}}
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center justify-between border-b border-gray-50 px-5 py-3.5">
                         <div class="flex items-center gap-2.5">
                             <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">

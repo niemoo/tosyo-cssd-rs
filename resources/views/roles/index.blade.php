@@ -25,7 +25,7 @@
     </div>
 
     {{-- Table --}}
-    <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
         <div class="flex items-center justify-between border-b border-gray-50 px-5 py-3.5">
             <p class="text-xs text-gray-400">
                 Menampilkan <span
@@ -109,7 +109,7 @@
                                     @endcan
 
                                     @can('roles.delete')
-                                        <div class="my-1 border-t border-gray-100"></div>
+                                        <div class="my-1 border-t border-gray-200"></div>
                                         <button type="button"
                                             onclick="document.getElementById('confirm-{{ $role->id }}').showModal()"
                                             class="flex w-full items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50">

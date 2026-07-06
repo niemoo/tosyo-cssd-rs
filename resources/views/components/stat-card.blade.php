@@ -18,7 +18,7 @@
     $c = $colors[$color] ?? $colors['green'];
 @endphp
 
-<div class="rounded-xl border border-gray-100 bg-white p-4 transition hover:border-green-200 hover:shadow-sm">
+<div class="rounded-xl border border-gray-200 bg-white p-4 transition hover:border-green-200 hover:shadow-sm">
     <div class="mb-3 flex items-center justify-between">
         @if ($icon)
             <div class="flex h-8 w-8 items-center justify-center rounded-lg {{ $c['bg'] }}">

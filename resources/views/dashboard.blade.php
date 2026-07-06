@@ -6,7 +6,7 @@
     </x-slot>
     {{-- <x-slot name="pageActions">
         <div
-            class="flex items-center gap-1.5 rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs text-gray-400">
+            class="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-400">
             <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500"></span>
             Real-time · Diperbarui barusan
         </div>
@@ -26,7 +26,7 @@
     {{-- PIPELINE STATUS --}}
     <div class="mb-6 -mx-4 sm:mx-0">
         <div class="overflow-x-auto px-4 sm:px-0 pb-2">
-            <div class="flex min-w-max rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div class="flex min-w-max rounded-xl border border-gray-200 bg-white overflow-hidden">
                 @foreach (\App\Models\Tray::STATUSES as $key => $val)
                     @php
                         $colorMap = [
@@ -69,7 +69,7 @@
                         $c = $colorMap[$val['color']] ?? $colorMap['gray'];
                     @endphp
                     <div
-                        class="flex flex-1 flex-col items-center gap-1.5 border-r border-gray-100 px-4 py-3 last:border-r-0 transition {{ $c['bg'] }} cursor-pointer">
+                        class="flex flex-1 flex-col items-center gap-1.5 border-r border-gray-200 px-4 py-3 last:border-r-0 transition {{ $c['bg'] }} cursor-pointer">
                         <div class="text-[10px] font-semibold text-gray-400">{{ $val['label'] }}</div>
                         <div class="text-xl font-extrabold {{ $c['text'] }}">
                             {{ $trayByStatus[$key] ?? 0 }}
@@ -85,7 +85,7 @@
     <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
 
         {{-- Tray Terbaru --}}
-        <div class="lg:col-span-2 rounded-xl border border-gray-100 bg-white">
+        <div class="lg:col-span-2 rounded-xl border border-gray-200 bg-white">
             <div class="flex items-center justify-between border-b border-gray-50 px-5 py-3.5">
                 <h3 class="text-sm font-bold text-gray-900">Tray Terbaru</h3>
                 @can('trays.view')
@@ -132,7 +132,7 @@
         <div class="flex flex-col gap-4 sm:flex-row lg:flex-col">
 
             {{-- Low Stock --}}
-            <div class="rounded-xl border border-gray-100 bg-white">
+            <div class="rounded-xl border border-gray-200 bg-white">
                 <div class="flex items-center justify-between border-b border-gray-50 px-4 py-3">
                     <h3 class="text-sm font-bold text-gray-900">Stok Menipis</h3>
                     @if ($lowStockConsumables->count() > 0)
@@ -160,7 +160,7 @@
             </div>
 
             {{-- Maintenance Due --}}
-            <div class="rounded-xl border border-gray-100 bg-white">
+            <div class="rounded-xl border border-gray-200 bg-white">
                 <div class="flex items-center justify-between border-b border-gray-50 px-4 py-3">
                     <h3 class="text-sm font-bold text-gray-900">Maintenance Due</h3>
                     @if ($sterilizersDue->count() > 0)
@@ -191,7 +191,7 @@
     </div>
 
     {{-- Consumable Stock Bar --}}
-    <div class="rounded-xl border border-gray-100 bg-white">
+    <div class="rounded-xl border border-gray-200 bg-white">
         <div class="flex items-center justify-between border-b border-gray-50 px-5 py-3.5">
             <h3 class="text-sm font-bold text-gray-900">Status Stok Consumable</h3>
             @can('consumables.view')

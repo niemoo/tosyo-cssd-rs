@@ -40,7 +40,7 @@
         <div class="space-y-4 lg:col-span-2">
 
             {{-- Info Item --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div class="border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Informasi Item</h3>
                 </div>
@@ -66,7 +66,7 @@
             </div>
 
             {{-- Siklus --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div class="border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Informasi Siklus</h3>
                 </div>
@@ -127,7 +127,7 @@
         <div class="space-y-4">
 
             {{-- QR Code --}}
-            <div class="rounded-xl border border-gray-100 bg-white p-5 text-center">
+            <div class="rounded-xl border border-gray-200 bg-white p-5 text-center">
                 <h4 class="mb-3 text-[11px] font-bold uppercase tracking-wider text-gray-400">QR Code</h4>
                 <div class="mx-auto inline-block">
                     {!! $instrumentItem->qrCodeSvg(160) !!}
@@ -136,7 +136,7 @@
             </div>
 
             {{-- Tray saat ini --}}
-            <div class="rounded-xl border border-gray-100 bg-white p-5">
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
                 <h4 class="mb-3 text-[11px] font-bold uppercase tracking-wider text-gray-400">Tray Saat Ini</h4>
                 @if ($instrumentItem->currentTray)
                     <div class="rounded-lg bg-primary-50 p-3">
@@ -150,7 +150,7 @@
             </div>
 
             {{-- Audit --}}
-            <div class="rounded-xl border border-gray-100 bg-white p-5">
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
                 <h4 class="mb-4 text-[11px] font-bold uppercase tracking-wider text-gray-400">Audit Trail</h4>
                 <div class="space-y-3">
                     @foreach ([['label' => 'Dibuat oleh', 'value' => $instrumentItem->creator?->name ?? '-'], ['label' => 'Dibuat pada', 'value' => $instrumentItem->created_at->format('d M Y, H:i')], ['label' => 'Diperbarui oleh', 'value' => $instrumentItem->updater?->name ?? '-'], ['label' => 'Diperbarui pada', 'value' => $instrumentItem->updated_at->format('d M Y, H:i')]] as $audit)

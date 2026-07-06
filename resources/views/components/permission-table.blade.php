@@ -3,7 +3,7 @@
 <div class="overflow-x-auto">
     <table class="w-full">
         <thead>
-            <tr class="border-b border-gray-100 bg-gray-50/50">
+            <tr class="border-b border-gray-200 bg-gray-50/50">
                 <th class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400 w-40">
                     Modul
                 </th>

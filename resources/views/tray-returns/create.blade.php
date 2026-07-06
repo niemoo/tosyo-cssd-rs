@@ -55,7 +55,7 @@
 
             <div class="space-y-4 lg:col-span-2">
 
-                <div class="rounded-xl border border-gray-100 bg-white">
+                <div class="rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center gap-2.5 border-b border-gray-50 px-5 py-3.5">
                         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
                             <svg class="h-3.5 w-3.5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2"
@@ -75,7 +75,7 @@
                                 $tray = $item->tray;
                                 $oldCondition = $oldReturns[$index]['condition'] ?? 'GOOD';
                             @endphp
-                            <div class="rounded-lg border border-gray-100 p-4" x-data="{ condition: '{{ $oldCondition }}' }">
+                            <div class="rounded-lg border border-gray-200 p-4" x-data="{ condition: '{{ $oldCondition }}' }">
 
                                 <input type="hidden" name="returns[{{ $index }}][tray_id]"
                                     value="{{ $tray->id }}" />

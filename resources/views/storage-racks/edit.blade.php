@@ -32,7 +32,7 @@
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
             <div class="space-y-4 lg:col-span-2">
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center gap-2.5 border-b border-gray-50 px-5 py-3.5">
                         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
                             <svg class="h-3.5 w-3.5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2"
@@ -50,7 +50,7 @@
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">Rumah
                                 Sakit</label>
                             <input type="text" value="{{ $storageRack->hospital->name }}" disabled
-                                class="w-full cursor-not-allowed rounded-lg border border-gray-100 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
+                                class="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
                         </div>
 
                         <div class="sm:col-span-2">
@@ -71,7 +71,7 @@
                             <label
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">Kode</label>
                             <input type="text" value="{{ $storageRack->code }}" disabled
-                                class="w-full cursor-not-allowed rounded-lg border border-gray-100 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
+                                class="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
                             <p class="mt-1 text-[10px] text-gray-400">Kode tidak dapat diubah</p>
                         </div>
 
@@ -102,7 +102,7 @@
 
             <div class="space-y-4">
 
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center gap-2.5 border-b border-gray-50 px-5 py-3.5">
                         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-50">
                             <svg class="h-3.5 w-3.5 text-primary-500" fill="none" stroke="currentColor"
@@ -115,7 +115,7 @@
                     </div>
                     <div class="p-5">
                         <div
-                            class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3.5">
+                            class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3.5">
                             <div>
                                 <div class="text-sm font-medium text-gray-900">Rak Aktif</div>
                                 <div class="text-xs text-gray-400">Dapat digunakan dalam sistem</div>
@@ -138,7 +138,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-100 bg-white p-5">
+                <div class="rounded-xl border border-gray-200 bg-white p-5">
                     <h4 class="mb-4 text-[11px] font-bold uppercase tracking-wider text-gray-400">Informasi Audit</h4>
                     <div class="space-y-3">
                         @foreach ([['label' => 'Dibuat oleh', 'value' => $storageRack->creator?->name ?? '-'], ['label' => 'Dibuat pada', 'value' => $storageRack->created_at->format('d M Y, H:i')], ['label' => 'Diperbarui oleh', 'value' => $storageRack->updater?->name ?? '-'], ['label' => 'Diperbarui pada', 'value' => $storageRack->updated_at->format('d M Y, H:i')]] as $audit)

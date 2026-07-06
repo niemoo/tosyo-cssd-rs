@@ -40,7 +40,7 @@
         <div class="space-y-4 lg:col-span-2">
 
             {{-- Profile Card --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div class="border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Informasi Pengguna</h3>
                 </div>
@@ -61,7 +61,7 @@
             </div>
 
             {{-- Rumah Sakit --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div class="border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Rumah Sakit Terdaftar</h3>
                 </div>
@@ -89,7 +89,7 @@
         <div class="space-y-4">
 
             {{-- Role --}}
-            <div class="rounded-xl border border-gray-100 bg-white p-5">
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
                 <h4 class="mb-4 text-[11px] font-bold uppercase tracking-wider text-gray-400">Role & Akses</h4>
                 @if ($user->roles->isNotEmpty())
                     <x-badge color="teal">{{ $user->roles->first()->name }}</x-badge>
@@ -99,7 +99,7 @@
             </div>
 
             {{-- Audit Trail --}}
-            <div class="rounded-xl border border-gray-100 bg-white p-5">
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
                 <h4 class="mb-4 text-[11px] font-bold uppercase tracking-wider text-gray-400">Audit Trail</h4>
                 <div class="space-y-3">
                     @foreach ([['label' => 'Dibuat oleh', 'value' => $user->creator?->name ?? '-'], ['label' => 'Dibuat pada', 'value' => $user->created_at->format('d M Y, H:i')], ['label' => 'Diperbarui oleh', 'value' => $user->updater?->name ?? '-'], ['label' => 'Diperbarui pada', 'value' => $user->updated_at->format('d M Y, H:i')]] as $audit)

@@ -29,10 +29,10 @@
     </div>
 
     {{-- Filter --}}
-    <div class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-gray-100 bg-white p-4">
+    <div class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
         <form method="GET" class="flex flex-1 flex-wrap items-center gap-3">
             <div
-                class="flex flex-1 items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 min-w-[200px]">
+                class="flex flex-1 items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 min-w-[200px]">
                 <svg class="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
                     viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8" />
@@ -45,7 +45,7 @@
 
             @if ($multiHospital)
                 <select name="hospital_id"
-                    class="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
+                    class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
                     <option value="">Semua RS Saya</option>
                     @foreach ($userHospitals as $hospital)
                         <option value="{{ $hospital->id }}"
@@ -57,7 +57,7 @@
             @endif
 
             <select name="instrument_id"
-                class="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
+                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
                 <option value="">Semua Instrumen</option>
                 @foreach ($instruments as $instrument)
                     <option value="{{ $instrument->id }}"
@@ -68,7 +68,7 @@
             </select>
 
             <select name="condition"
-                class="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
+                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
                 <option value="">Semua Kondisi</option>
                 @foreach ($conditions as $key => $condition)
                     <option value="{{ $key }}" {{ request('condition') === $key ? 'selected' : '' }}>
@@ -78,7 +78,7 @@
             </select>
 
             <select name="status"
-                class="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
+                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
                 <option value="">Semua Status</option>
                 <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
                 <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Non-aktif</option>
@@ -104,7 +104,7 @@
     </div>
 
     {{-- Table --}}
-    <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
         <div class="flex items-center justify-between border-b border-gray-50 px-5 py-3.5">
             <p class="text-xs text-gray-400">
                 Menampilkan <span
@@ -161,7 +161,7 @@
                             <td class="px-5 py-3.5 text-center">
                                 <button type="button"
                                     onclick="document.getElementById('qr-modal-{{ $item->id }}').showModal()"
-                                    class="inline-flex items-center justify-center rounded-lg border border-gray-100 p-1 transition hover:border-primary-200 hover:bg-primary-50">
+                                    class="inline-flex items-center justify-center rounded-lg border border-gray-200 p-1 transition hover:border-primary-200 hover:bg-primary-50">
                                     {!! $item->qrCodeSvg(36) !!}
                                 </button>
                             </td>
@@ -279,7 +279,7 @@
                                         @endcan
 
                                         @can('instrument-items.delete')
-                                            <div class="my-1 border-t border-gray-100"></div>
+                                            <div class="my-1 border-t border-gray-200"></div>
                                             <button type="button"
                                                 onclick="document.getElementById('confirm-{{ $item->id }}').showModal()"
                                                 class="flex w-full items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50">

@@ -42,7 +42,7 @@
             <div class="space-y-4 lg:col-span-2">
 
                 {{-- Informasi Tray --}}
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center gap-2.5 border-b border-gray-50 px-5 py-3.5">
                         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
                             <svg class="h-3.5 w-3.5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2"
@@ -60,7 +60,7 @@
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">Rumah
                                 Sakit</label>
                             <input type="text" value="{{ $tray->hospital->name }}" disabled
-                                class="w-full cursor-not-allowed rounded-lg border border-gray-100 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
+                                class="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
                         </div>
 
                         <div class="sm:col-span-2">
@@ -81,7 +81,7 @@
                             <label
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">Kode</label>
                             <input type="text" value="{{ $tray->code }}" disabled
-                                class="w-full cursor-not-allowed rounded-lg border border-gray-100 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
+                                class="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
                             <p class="mt-1 text-[10px] text-gray-400">Kode tidak dapat diubah</p>
                         </div>
 
@@ -102,7 +102,7 @@
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">Template</label>
                             <input type="text" value="{{ $tray->template?->name ?? 'Tray Bebas (tanpa template)' }}"
                                 disabled
-                                class="w-full cursor-not-allowed rounded-lg border border-gray-100 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
+                                class="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-400" />
                         </div>
 
                         <div class="sm:col-span-2">
@@ -117,7 +117,7 @@
                 </div>
 
                 {{-- Daftar Instrumen --}}
-                <div class="rounded-xl border border-gray-100 bg-white">
+                <div class="rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center gap-2.5 border-b border-gray-50 px-5 py-3.5">
                         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
                             <svg class="h-3.5 w-3.5 text-amber-600" fill="none" stroke="currentColor"
@@ -191,11 +191,11 @@
                                             x-transition:enter-start="opacity-0 scale-95"
                                             x-transition:enter-end="opacity-100 scale-100"
                                             :style="`position: fixed; top: ${pos.top}px; left: ${pos.left}px; width: ${pos.width}px; z-index: 9999;`"
-                                            class="rounded-xl border border-gray-100 bg-white shadow-lg"
+                                            class="rounded-xl border border-gray-200 bg-white shadow-lg"
                                             style="display: none;" x-cloak>
                                             <div class="border-b border-gray-50 p-2">
                                                 <div
-                                                    class="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                                                    class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
                                                     <svg class="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none"
                                                         stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                         <circle cx="11" cy="11" r="8" />
@@ -259,7 +259,7 @@
 
             <div class="space-y-4">
 
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center gap-2.5 border-b border-gray-50 px-5 py-3.5">
                         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-50">
                             <svg class="h-3.5 w-3.5 text-primary-500" fill="none" stroke="currentColor"
@@ -273,7 +273,7 @@
                     <div class="p-5">
                         @php $statusInfo = \App\Models\Tray::STATUSES[$tray->status] ?? ['label' => $tray->status, 'color' => 'gray']; @endphp
                         <div
-                            class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3.5">
+                            class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3.5">
                             <span class="text-xs text-gray-500">Status saat ini</span>
                             <x-badge :color="$statusInfo['color']" dot>{{ $statusInfo['label'] }}</x-badge>
                         </div>
@@ -282,7 +282,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-100 bg-white p-5">
+                <div class="rounded-xl border border-gray-200 bg-white p-5">
                     <h4 class="mb-4 text-[11px] font-bold uppercase tracking-wider text-gray-400">Informasi Audit</h4>
                     <div class="space-y-3">
                         @foreach ([['label' => 'Dibuat oleh', 'value' => $tray->creator?->name ?? '-'], ['label' => 'Dibuat pada', 'value' => $tray->created_at->format('d M Y, H:i')], ['label' => 'Diperbarui oleh', 'value' => $tray->updater?->name ?? '-'], ['label' => 'Diperbarui pada', 'value' => $tray->updated_at->format('d M Y, H:i')]] as $audit)

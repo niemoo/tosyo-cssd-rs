@@ -34,7 +34,7 @@
             <div class="space-y-4 lg:col-span-2">
 
                 {{-- Nama Role --}}
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center gap-2.5 border-b border-gray-50 px-5 py-3.5">
                         <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100">
                             <svg class="h-3.5 w-3.5 text-purple-600" fill="none" stroke="currentColor"
@@ -60,7 +60,7 @@
                 </div>
 
                 {{-- Permissions --}}
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="flex items-center justify-between border-b border-gray-50 px-5 py-3.5">
                         <div class="flex items-center gap-2.5">
                             <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
@@ -89,7 +89,7 @@
             <div class="space-y-4">
 
                 {{-- Audit Info --}}
-                <div class="rounded-xl border border-gray-100 bg-white p-5">
+                <div class="rounded-xl border border-gray-200 bg-white p-5">
                     <h4 class="mb-4 text-[11px] font-bold uppercase tracking-wider text-gray-400">Informasi Audit</h4>
                     <div class="space-y-3">
                         @foreach ([['label' => 'Dibuat pada', 'value' => $role->created_at->format('d M Y, H:i')], ['label' => 'Diperbarui pada', 'value' => $role->updated_at->format('d M Y, H:i')]] as $audit)

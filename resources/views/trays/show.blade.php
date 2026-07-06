@@ -43,7 +43,7 @@
         <div class="space-y-4 lg:col-span-2">
 
             {{-- Info Tray --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div class="border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Informasi Tray</h3>
                 </div>
@@ -68,7 +68,7 @@
             </div>
 
             {{-- Daftar Instrumen --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div class="flex items-center justify-between border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Instrumen dalam Tray</h3>
                     <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-600">
@@ -104,7 +104,7 @@
 
             {{-- Riwayat Sterilisasi --}}
             @if ($tray->sterilizationBatchItems->count() > 0)
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="border-b border-gray-50 px-5 py-3.5">
                         <h3 class="text-sm font-bold text-gray-900">Riwayat Sterilisasi</h3>
                     </div>
@@ -137,7 +137,7 @@
             @endif
 
             {{-- Pemakaian Consumable --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white" x-data="{ open: {{ $errors->has('quantity') ? 'true' : 'false' }} }">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white" x-data="{ open: {{ $errors->has('quantity') ? 'true' : 'false' }} }">
                 <div class="flex items-center justify-between border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Pemakaian Consumable</h3>
                     <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-600">
@@ -226,7 +226,7 @@
         </div>
 
         <div class="space-y-4">
-            <div class="rounded-xl border border-gray-100 bg-white p-5">
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
                 <h4 class="mb-4 text-[11px] font-bold uppercase tracking-wider text-gray-400">Audit Trail</h4>
                 <div class="space-y-3">
                     @foreach ([['label' => 'Dibuat oleh', 'value' => $tray->creator?->name ?? '-'], ['label' => 'Dibuat pada', 'value' => $tray->created_at->format('d M Y, H:i')], ['label' => 'Diperbarui oleh', 'value' => $tray->updater?->name ?? '-'], ['label' => 'Diperbarui pada', 'value' => $tray->updated_at->format('d M Y, H:i')]] as $audit)

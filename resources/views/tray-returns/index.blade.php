@@ -16,10 +16,10 @@
     </div>
 
     {{-- Filter --}}
-    <div class="mb-4 rounded-xl border border-gray-100 bg-white p-4">
+    <div class="mb-4 rounded-xl border border-gray-200 bg-white p-4">
         <form method="GET" class="flex flex-wrap items-center gap-3">
             <div
-                class="flex flex-1 items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 min-w-[200px]">
+                class="flex flex-1 items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 min-w-[200px]">
                 <svg class="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
                     viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8" />
@@ -32,7 +32,7 @@
 
             @if ($multiHospital)
                 <select name="hospital_id"
-                    class="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
+                    class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
                     <option value="">Semua RS</option>
                     @foreach ($userHospitals as $h)
                         <option value="{{ $h->id }}" {{ request('hospital_id') == $h->id ? 'selected' : '' }}>
@@ -42,7 +42,7 @@
             @endif
 
             <select name="condition"
-                class="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
+                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
                 <option value="">Semua Kondisi</option>
                 @foreach (\App\Models\TrayReturn::CONDITIONS as $key => $val)
                     <option value="{{ $key }}" {{ request('condition') === $key ? 'selected' : '' }}>
@@ -62,7 +62,7 @@
     </div>
 
     {{-- Table --}}
-    <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
         <div class="border-b border-gray-50 px-5 py-3.5">
             <p class="text-xs text-gray-400">
                 Menampilkan <span

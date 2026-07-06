@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(php artisan *)"
+      "Bash(php artisan *)",
+      "Bash(awk -F: '{sum+=$2} END {print sum}')",
+      "Bash(xargs sed -i '' 's/border-gray-100/border-gray-200/g')",
+      "Bash(awk -F: '{sum+=$2} END {print sum+0}')"
     ]
   }
 }

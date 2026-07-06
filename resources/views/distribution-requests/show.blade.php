@@ -110,7 +110,7 @@
         <div class="space-y-4 lg:col-span-2">
 
             {{-- Info --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div class="border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Informasi Permintaan</h3>
                 </div>
@@ -135,7 +135,7 @@
             </div>
 
             {{-- Items --}}
-            <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div class="flex items-center justify-between border-b border-gray-50 px-5 py-3.5">
                     <h3 class="text-sm font-bold text-gray-900">Daftar Tray</h3>
                     <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-600">
@@ -172,7 +172,7 @@
 
             {{-- Tray Returns --}}
             @if ($distributionRequest->trayReturns->count() > 0)
-                <div class="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div class="border-b border-gray-50 px-5 py-3.5">
                         <h3 class="text-sm font-bold text-gray-900">Riwayat Pengembalian</h3>
                     </div>
@@ -201,7 +201,7 @@
         </div>
 
         <div class="space-y-4">
-            <div class="rounded-xl border border-gray-100 bg-white p-5">
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
                 <h4 class="mb-4 text-[11px] font-bold uppercase tracking-wider text-gray-400">Audit Trail</h4>
                 <div class="space-y-3">
                     @foreach ([['label' => 'Dibuat oleh', 'value' => $distributionRequest->creator?->name ?? '-'], ['label' => 'Dibuat pada', 'value' => $distributionRequest->created_at->format('d M Y, H:i')], ['label' => 'Diperbarui oleh', 'value' => $distributionRequest->updater?->name ?? '-'], ['label' => 'Diperbarui pada', 'value' => $distributionRequest->updated_at->format('d M Y, H:i')]] as $audit)
@@ -223,7 +223,7 @@
                 <form method="POST" action="{{ route('distribution-requests.approve', $distributionRequest) }}"
                     x-data="{ decision: 'approve' }">
                     @csrf @method('PATCH')
-                    <div class="border-b border-gray-100 p-5">
+                    <div class="border-b border-gray-200 p-5">
                         <h3 class="text-base font-bold text-gray-900">Review Permintaan</h3>
                         <p class="mt-1 text-sm text-gray-500">{{ $distributionRequest->request_number }} —
                             {{ $distributionRequest->unit->name }}</p>
@@ -259,7 +259,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="flex gap-2 border-t border-gray-100 p-5">
+                    <div class="flex gap-2 border-t border-gray-200 p-5">
                         <button type="button" onclick="document.getElementById('approve-modal').close()"
                             class="flex-1 rounded-lg border border-gray-200 bg-white py-2.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50">
                             Batal
