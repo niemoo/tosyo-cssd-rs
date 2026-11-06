@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Hospital extends Model
 {
-    use SoftDeletes, HasAuditColumns;
+    use HasAuditColumns, SoftDeletes;
 
     protected $fillable = [
         'name',
         'code',
         'address',
         'phone',
+        'sterile_shelf_life_days',
         'is_active',
         'created_by',
         'updated_by',
@@ -24,7 +25,8 @@ class Hospital extends Model
     protected function casts(): array
     {
         return [
-            'is_active'  => 'boolean',
+            'is_active' => 'boolean',
+            'sterile_shelf_life_days' => 'integer',
             'deleted_at' => 'datetime',
         ];
     }
@@ -38,8 +40,8 @@ class Hospital extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'hospital_users')
-                    ->withPivot('joined_at', 'is_active')
-                    ->withTimestamps();
+            ->withPivot('joined_at', 'is_active')
+            ->withTimestamps();
     }
 
     public function units()

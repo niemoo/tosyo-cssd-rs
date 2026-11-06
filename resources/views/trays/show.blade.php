@@ -22,6 +22,19 @@
     <x-slot name="pageSubHeader">{{ $tray->code }} · {{ $tray->hospital->name }}</x-slot>
 
     <x-slot name="pageActions">
+        @can('trays.view')
+            @if ($tray->sterile_at)
+                <a href="{{ route('trays.label', $tray) }}" target="_blank"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a1 1 0 001-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Cetak Label
+                </a>
+            @endif
+        @endcan
+
         @can('trays.edit')
             @if (in_array($tray->status, [\App\Models\Tray::STATUS_ASSEMBLING, \App\Models\Tray::STATUS_NEEDS_REPROCESSING]))
                 <a href="{{ route('trays.edit', $tray) }}"
@@ -32,6 +45,35 @@
                     </svg>
                     Edit
                 </a>
+            @endif
+
+            @if ($tray->canBeMarkedReady())
+                <form method="POST" action="{{ route('trays.ready', $tray) }}">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Tandai Siap Sterilisasi
+                    </button>
+                </form>
+            @endif
+
+            @if ($tray->canBeReprocessed())
+                <form method="POST" action="{{ route('trays.reprocess', $tray) }}">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-blue-400 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Proses Ulang
+                    </button>
+                </form>
             @endif
         @endcan
     </x-slot>
@@ -58,6 +100,43 @@
                         <span class="text-xs text-gray-400">Status</span>
                         <x-badge :color="$statusInfo['color']" dot>{{ $statusInfo['label'] }}</x-badge>
                     </div>
+
+                    @if ($tray->sterile_at)
+                        @php $daysRemaining = (int) ceil(now()->diffInDays($tray->expiry_at, false)); @endphp
+                        <div class="flex items-start justify-between px-5 py-3">
+                            <span class="w-36 shrink-0 text-xs text-gray-400">Tgl Steril</span>
+                            <span class="text-right text-sm font-medium text-gray-700">{{ $tray->sterile_at->format('d M Y, H:i') }}</span>
+                        </div>
+                        <div class="flex items-center justify-between px-5 py-3">
+                            <span class="text-xs text-gray-400">Kedaluwarsa Steril</span>
+                            @if ($tray->isExpired())
+                                <x-badge color="red" dot>Kedaluwarsa · {{ $tray->expiry_at->format('d M Y') }}</x-badge>
+                            @elseif ($tray->expiresWithinDays(7))
+                                <x-badge color="amber" dot>{{ $tray->expiry_at->format('d M Y') }} · {{ $daysRemaining }} hari lagi</x-badge>
+                            @else
+                                <x-badge color="green" dot>{{ $tray->expiry_at->format('d M Y') }} · {{ $daysRemaining }} hari lagi</x-badge>
+                            @endif
+                        </div>
+                        @if ($tray->current_load_number)
+                            <div class="flex items-start justify-between px-5 py-3">
+                                <span class="w-36 shrink-0 text-xs text-gray-400">No. Load</span>
+                                <span class="text-right text-sm font-medium text-gray-700">{{ $tray->current_load_number }}</span>
+                            </div>
+                        @endif
+                    @endif
+
+                    <div class="flex items-center justify-between px-5 py-3">
+                        <span class="text-xs text-gray-400">Siklus Tercatat</span>
+                        <span class="text-right text-sm font-medium text-gray-700">
+                            {{ $recordedCycles }}x
+                            <span class="text-[10px] font-normal text-gray-400">(sejak pencatatan digital)</span>
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between px-5 py-3">
+                        <span class="text-xs text-gray-400">Siklus Instrumen (tertinggi)</span>
+                        <span class="text-sm font-medium text-gray-700">{{ $maxInstrumentCycles !== null ? number_format($maxInstrumentCycles).'x' : '-' }}</span>
+                    </div>
+
                     @if ($tray->notes)
                         <div class="px-5 py-3">
                             <span class="text-xs text-gray-400">Catatan</span>
@@ -165,7 +244,7 @@
                     @endforelse
                 </div>
 
-                @can('trays.edit')
+                @can('consumable-movements.create')
                     <div class="border-t border-gray-50 p-4">
                         <button type="button" @click="open = !open"
                             class="flex items-center gap-1.5 text-sm font-medium text-primary-500 transition hover:text-primary-600">
@@ -182,17 +261,10 @@
                             <input type="hidden" name="usageable_id" value="{{ $tray->id }}" />
 
                             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                <select name="consumable_id"
-                                    class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 transition
-                                           focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                                    <option value="">Pilih consumable...</option>
-                                    @foreach ($consumables as $c)
-                                        <option value="{{ $c->id }}"
-                                            {{ old('consumable_id') == $c->id ? 'selected' : '' }}>
-                                            {{ $c->name }} ({{ $c->current_stock }} {{ $c->unit }} tersedia)
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select name="consumable_id" placeholder="Pilih consumable..."
+                                    searchPlaceholder="Cari consumable..." emptyText="Consumable tidak ditemukan"
+                                    :options="$consumables->map(fn ($c) => ['id' => (string) $c->id, 'label' => $c->name . ' (' . $c->current_stock . ' ' . $c->unit . ' tersedia)'])->values()"
+                                    :selected="old('consumable_id')" />
                                 <input type="number" name="quantity" min="1" value="{{ old('quantity', 1) }}"
                                     placeholder="Jumlah"
                                     class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 transition
@@ -226,6 +298,143 @@
         </div>
 
         <div class="space-y-4">
+
+            {{-- Langkah Berikutnya --}}
+            <div class="overflow-hidden rounded-xl border-2 border-primary-200 bg-primary-50/40">
+                <div class="border-b border-primary-100 px-5 py-3.5">
+                    <h3 class="text-sm font-bold text-gray-900">Langkah Berikutnya</h3>
+                </div>
+                <div class="space-y-3 px-5 py-4">
+                    @switch($tray->status)
+                        @case(\App\Models\Tray::STATUS_ASSEMBLING)
+                            @if ($tray->items->count() === 0)
+                                <p class="text-sm text-gray-600">Tray belum berisi instrumen. Tambahkan instrumen
+                                    terlebih dahulu sebelum bisa ditandai siap sterilisasi.</p>
+                            @else
+                                <p class="text-sm text-gray-600">Tray sudah berisi instrumen dan siap dikemas untuk
+                                    sterilisasi.</p>
+                                @can('trays.edit')
+                                    <form method="POST" action="{{ route('trays.ready', $tray) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit"
+                                            class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+                                            Tandai Siap Sterilisasi
+                                        </button>
+                                    </form>
+                                @endcan
+                            @endif
+                            @break
+
+                        @case(\App\Models\Tray::STATUS_READY)
+                            <p class="text-sm text-gray-600">Tray siap disterilkan.</p>
+                            <div class="flex flex-wrap gap-2">
+                                @can('sterilization-batches.create')
+                                    <a href="{{ route('sterilization-batches.create') }}"
+                                        class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary-500 to-primary-400 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+                                        Buat Batch Sterilisasi →
+                                    </a>
+                                @endcan
+                                @can('trays.edit')
+                                    <form method="POST" action="{{ route('trays.unpack', $tray) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit"
+                                            class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+                                            Buka Kemasan
+                                        </button>
+                                    </form>
+                                @endcan
+                            </div>
+                            @break
+
+                        @case(\App\Models\Tray::STATUS_IN_STERILIZATION)
+                            @if ($pendingBatch)
+                                <p class="text-sm text-gray-600">Sedang dalam batch
+                                    <span class="font-semibold text-gray-900">{{ $pendingBatch->batch_number }}</span>.
+                                </p>
+                                @can('sterilization-batches.edit')
+                                    <a href="{{ route('sterilization-batches.show', $pendingBatch) }}"
+                                        class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary-500 to-primary-400 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+                                        Input Hasil →
+                                    </a>
+                                @endcan
+                            @else
+                                <p class="text-sm text-gray-600">Sedang dalam proses sterilisasi.</p>
+                            @endif
+                            @break
+
+                        @case(\App\Models\Tray::STATUS_STERILE)
+                            @php $daysLeft = $tray->expiry_at ? (int) ceil(now()->diffInDays($tray->expiry_at, false)) : null; @endphp
+                            <p class="text-sm text-gray-600">
+                                Steril s/d
+                                <span class="font-semibold text-gray-900">{{ $tray->expiry_at?->format('d M Y') ?? '-' }}</span>
+                                @if ($daysLeft !== null)
+                                    ({{ $daysLeft }} hari lagi).
+                                @endif
+                                Menunggu permintaan dari unit.
+                            </p>
+                            @can('distribution-requests.view')
+                                <a href="{{ route('distribution-requests.index') }}"
+                                    class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary-500 to-primary-400 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+                                    Lihat Permintaan Distribusi →
+                                </a>
+                            @endcan
+                            @break
+
+                        @case(\App\Models\Tray::STATUS_IN_USE)
+                            @if ($issuedTo)
+                                <p class="text-sm text-gray-600">Sedang digunakan di
+                                    <span class="font-semibold text-gray-900">{{ $issuedTo->unit->name }}</span>
+                                    ({{ $issuedTo->request_number }}).
+                                </p>
+                                @can('distribution-requests.return')
+                                    @if (in_array($issuedTo->status, [\App\Models\DistributionRequest::STATUS_FULFILLED, \App\Models\DistributionRequest::STATUS_CLOSED]))
+                                        <a href="{{ route('tray-returns.create', $issuedTo) }}"
+                                            class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary-500 to-primary-400 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+                                            Catat Pengembalian →
+                                        </a>
+                                    @endif
+                                @endcan
+                            @else
+                                <p class="text-sm text-gray-600">Sedang digunakan oleh unit.</p>
+                            @endif
+                            @break
+
+                        @case(\App\Models\Tray::STATUS_RETURNED)
+                        @case(\App\Models\Tray::STATUS_NEEDS_REPROCESSING)
+                            <p class="text-sm text-gray-600">Tray perlu diproses ulang sebelum bisa dirakit kembali.</p>
+                            @can('trays.edit')
+                                <form method="POST" action="{{ route('trays.reprocess', $tray) }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit"
+                                        class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-blue-400 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+                                        Proses Ulang
+                                    </button>
+                                </form>
+                            @endcan
+                            @break
+                    @endswitch
+                </div>
+            </div>
+
+            {{-- Riwayat Alur (Lifecycle) --}}
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <div class="border-b border-gray-50 px-5 py-3.5">
+                    <h3 class="text-sm font-bold text-gray-900">Riwayat Alur</h3>
+                </div>
+                @if ($tray->lifecycleEvents->isEmpty())
+                    <div class="px-5 py-6 text-center text-sm text-gray-400">Belum ada peristiwa tercatat</div>
+                @else
+                    <ol class="relative px-5 py-4">
+                        @foreach ($tray->lifecycleEvents as $event)
+                            <x-lifecycle-event-row :event="$event" :last="$loop->last" />
+                        @endforeach
+                    </ol>
+                @endif
+            </div>
+
             <div class="rounded-xl border border-gray-200 bg-white p-5">
                 <h4 class="mb-4 text-[11px] font-bold uppercase tracking-wider text-gray-400">Audit Trail</h4>
                 <div class="space-y-3">

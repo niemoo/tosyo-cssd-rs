@@ -4,7 +4,25 @@
       "Bash(php artisan *)",
       "Bash(awk -F: '{sum+=$2} END {print sum}')",
       "Bash(xargs sed -i '' 's/border-gray-100/border-gray-200/g')",
-      "Bash(awk -F: '{sum+=$2} END {print sum+0}')"
+      "Bash(awk -F: '{sum+=$2} END {print sum+0}')",
+      "Bash(awk -F: '{sum+=$2} END{print sum}')",
+      "Bash(grep -rB2 -A10 '<select name=\"unit_id\"' resources/views/distribution-requests/create.blade.php)",
+      "Bash(php -r ' *)",
+      "Bash(awk '{print $2}')",
+      "Bash(grep '\\\\.blade\\\\.php$')",
+      "Bash(php -l app/Models/InstrumentItem.php)",
+      "Bash(php -l app/Http/Controllers/InstrumentItemController.php)",
+      "Bash(cd /Users/bsr-asset-202304-001/code/laravel/cssd-web; echo \"=== DistributionRequestController \\(fulfillment portion\\) ===\"; sed -n '1,60p;/processFulfillment/,/^    }/p' app/Http/Controllers/DistributionRequestController.php | head -180)",
+      "Skill(artifact-design)",
+      "Skill(artifact-design:*)",
+      "Bash(php artisan tinker '--execute= *)",
+      "Bash(vendor/bin/pint app/Services/TrayService.php app/Models/TrayLifecycleEvent.php app/Exceptions/InvalidTrayTransition.php app/Http/Controllers/TrayController.php app/Http/Controllers/SterilizationBatchController.php app/Http/Controllers/DistributionRequestController.php app/Http/Controllers/TrayReturnController.php database/migrations/2026_07_07_000000_create_tray_lifecycle_events_table.php)",
+      "Bash(vendor/bin/pint app/Http/Controllers/TrayController.php app/Models/Tray.php)",
+      "Bash(vendor/bin/pint app/Models/Hospital.php app/Models/SterilizationBatch.php app/Models/SterilizationBatchItem.php app/Models/Tray.php app/Http/Requests/StoreSterilizationBatchRequest.php app/Http/Requests/UpdateBatchResultRequest.php app/Http/Controllers/SterilizationBatchController.php app/Http/Controllers/TrayController.php app/Http/Controllers/DistributionRequestController.php database/migrations/2026_07_07_000001_add_sterility_detail_columns.php)",
+      "Bash(vendor/bin/pint app/Models/DistributionRequestItem.php app/Models/DistributionRequest.php app/Http/Requests/FulfillDistributionRequestRequest.php app/Http/Controllers/DistributionRequestController.php app/Http/Controllers/TrayReturnController.php database/seeders/DistributionRequestSeeder.php database/migrations/2026_07_07_000002_create_distribution_request_item_trays_table.php)"
+    ],
+    "additionalDirectories": [
+      "/Users/bsr-asset-202304-001/code/laravel/cssd-web/app/Http/Controllers"
     ]
   }
 }

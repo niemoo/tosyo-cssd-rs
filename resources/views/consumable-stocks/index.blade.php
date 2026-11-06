@@ -48,33 +48,17 @@
             </div>
 
             @if ($multiHospital)
-                <select name="hospital_id"
-                    class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                    <option value="">Semua RS Saya</option>
-                    @foreach ($userHospitals as $hospital)
-                        <option value="{{ $hospital->id }}"
-                            {{ request('hospital_id') == $hospital->id ? 'selected' : '' }}>
-                            {{ $hospital->name }}
-                        </option>
-                    @endforeach
-                </select>
+                <x-searchable-select name="hospital_id" placeholder="Semua RS Saya"
+                    :options="$userHospitals->map(fn ($h) => ['id' => (string) $h->id, 'label' => $h->name])->values()"
+                    :selected="request('hospital_id')" />
             @endif
 
-            <select name="category_id"
-                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                <option value="">Semua Kategori</option>
-                @foreach ($categories as $category)
-                    <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                        {{ $category->name }}
-                    </option>
-                @endforeach
-            </select>
+            <x-searchable-select name="category_id" placeholder="Semua Kategori"
+                :options="$categories->map(fn ($c) => ['id' => (string) $c->id, 'label' => $c->name])->values()"
+                :selected="request('category_id')" />
 
-            <select name="stock"
-                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                <option value="">Semua Stok</option>
-                <option value="low" {{ request('stock') === 'low' ? 'selected' : '' }}>Stok Menipis</option>
-            </select>
+            <x-searchable-select name="stock" placeholder="Semua Stok"
+                :options="[['id' => 'low', 'label' => 'Stok Menipis']]" :selected="request('stock')" />
 
             <button type="submit"
                 class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700">

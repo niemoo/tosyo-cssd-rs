@@ -79,18 +79,9 @@
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                 Tipe <span class="text-red-500">*</span>
                             </label>
-                            <select name="type"
-                                class="w-full rounded-lg border bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
-                                           focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20
-                                           {{ $errors->has('type') ? 'border-red-400' : 'border-gray-200' }}">
-                                <option value="">Pilih Tipe</option>
-                                @foreach ($types as $key => $type)
-                                    <option value="{{ $key }}"
-                                        {{ old('type', $sterilizer->type) === $key ? 'selected' : '' }}>
-                                        {{ $type['label'] }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select name="type" placeholder="Pilih Tipe"
+                                :options="collect($types)->map(fn ($t, $key) => ['id' => $key, 'label' => $t['label']])->values()"
+                                :selected="old('type', $sterilizer->type)" :error="$errors->has('type')" />
                             @error('type')
                                 <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror

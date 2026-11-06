@@ -12,13 +12,6 @@ use Illuminate\Http\RedirectResponse;
 
 class InstrumentItemController extends Controller
 {
-    private const CONDITIONS = [
-        'GOOD'         => ['label' => 'Baik',            'color' => 'green'],
-        'DAMAGED'      => ['label' => 'Rusak',           'color' => 'red'],
-        'UNDER_REPAIR' => ['label' => 'Sedang Perbaikan','color' => 'amber'],
-        'RETIRED'      => ['label' => 'Pensiun',         'color' => 'gray'],
-    ];
-
     public function index(Request $request): View
     {
         $sortBy  = $request->get('sort', 'created_at');
@@ -101,7 +94,7 @@ class InstrumentItemController extends Controller
             'items', 'instruments', 'stats',
             'sortBy', 'sortDir',
             'multiHospital', 'userHospitals'
-        ))->with('conditions', self::CONDITIONS);
+        ))->with('conditions', InstrumentItem::CONDITIONS);
     }
 
     public function create(): View|RedirectResponse
@@ -119,7 +112,7 @@ class InstrumentItemController extends Controller
                                  ->get();
 
         return view('instrument-items.create', compact('userHospitals', 'instruments'))
-               ->with('conditions', self::CONDITIONS);
+               ->with('conditions', InstrumentItem::CONDITIONS);
     }
 
     public function store(StoreInstrumentItemRequest $request): RedirectResponse
@@ -135,7 +128,7 @@ class InstrumentItemController extends Controller
         $instrumentItem->load(['instrument.category', 'hospital', 'currentTray']);
 
         return view('instrument-items.show', compact('instrumentItem'))
-               ->with('conditions', self::CONDITIONS);
+               ->with('conditions', InstrumentItem::CONDITIONS);
     }
 
     public function edit(InstrumentItem $instrumentItem): View
@@ -148,7 +141,7 @@ class InstrumentItemController extends Controller
                                  ->get();
 
         return view('instrument-items.edit', compact('instrumentItem', 'userHospitals', 'instruments'))
-               ->with('conditions', self::CONDITIONS);
+               ->with('conditions', InstrumentItem::CONDITIONS);
     }
 
     public function update(UpdateInstrumentItemRequest $request, InstrumentItem $instrumentItem): RedirectResponse

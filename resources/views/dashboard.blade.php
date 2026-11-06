@@ -21,6 +21,10 @@
         <x-stat-card label="Sedang Digunakan" :value="$trayStats['distributed']" color="purple" icon="M5 12h14M12 5l7 7-7 7" />
         <x-stat-card label="Tersimpan di Rak" :value="$trayStats['stored']" color="blue"
             icon="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+        <x-stat-card label="Akan Kedaluwarsa (7 hari)" :value="$expiryStats['expiring_soon']" color="amber"
+            icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <x-stat-card label="Sudah Kedaluwarsa" :value="$expiryStats['expired']" color="red"
+            icon="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
     </div>
 
     {{-- PIPELINE STATUS --}}
@@ -183,6 +187,41 @@
                         </div>
                     @empty
                         <div class="px-4 py-4 text-center text-xs text-gray-400">Semua mesin oke</div>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Kedaluwarsa Steril --}}
+            <div class="rounded-xl border border-gray-200 bg-white">
+                <div class="flex items-center justify-between border-b border-gray-50 px-4 py-3">
+                    <h3 class="text-sm font-bold text-gray-900">Kedaluwarsa Steril</h3>
+                    @if ($expiryStats['expired'] > 0)
+                        <span class="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">
+                            {{ $expiryStats['expired'] }} sudah lewat
+                        </span>
+                    @elseif ($expiryStats['expiring_soon'] > 0)
+                        <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-600">
+                            {{ $expiryStats['expiring_soon'] }} tray
+                        </span>
+                    @endif
+                </div>
+                <div class="divide-y divide-gray-50">
+                    @forelse($soonestExpiringTrays as $tray)
+                        <a href="{{ route('trays.show', $tray) }}"
+                            class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+                            <div class="min-w-0 flex-1">
+                                <div class="truncate text-xs font-semibold text-gray-900">{{ $tray->name }}</div>
+                                <div class="text-[10px] text-gray-400">{{ $tray->code }}</div>
+                            </div>
+                            @if ($tray->isExpired())
+                                <x-badge color="red">{{ $tray->expiry_at->format('d M Y') }}</x-badge>
+                            @else
+                                <x-badge color="amber">{{ $tray->expiry_at->format('d M Y') }}</x-badge>
+                            @endif
+                        </a>
+                    @empty
+                        <div class="px-4 py-4 text-center text-xs text-gray-400">Tidak ada tray mendekati kedaluwarsa
+                        </div>
                     @endforelse
                 </div>
             </div>

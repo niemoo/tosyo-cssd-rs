@@ -46,18 +46,10 @@
                                 Rumah Sakit <span class="text-red-500">*</span>
                             </label>
                             @if ($userHospitals->count() > 1)
-                                <select name="hospital_id"
-                                    class="w-full rounded-lg border bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
-                                               focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20
-                                               {{ $errors->has('hospital_id') ? 'border-red-400' : 'border-gray-200' }}">
-                                    <option value="">Pilih Rumah Sakit</option>
-                                    @foreach ($userHospitals as $hospital)
-                                        <option value="{{ $hospital->id }}"
-                                            {{ old('hospital_id', session('active_hospital_id')) == $hospital->id ? 'selected' : '' }}>
-                                            {{ $hospital->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select name="hospital_id" placeholder="Pilih Rumah Sakit"
+                                    :options="$userHospitals->map(fn ($h) => ['id' => (string) $h->id, 'label' => $h->name])->values()"
+                                    :selected="old('hospital_id', session('active_hospital_id'))"
+                                    :error="$errors->has('hospital_id')" />
                             @else
                                 <input type="hidden" name="hospital_id" value="{{ $userHospitals->first()->id }}" />
                                 <input type="text" value="{{ $userHospitals->first()->name }}" disabled

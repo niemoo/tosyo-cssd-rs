@@ -76,6 +76,7 @@
                 class="mt-0.5 ml-3 space-y-0.5 border-l border-gray-300 pl-3">
                 @can('trays.view')
                     <x-sidebar-item route="trays.index" icon="layers">Pelacakan Tray</x-sidebar-item>
+                    <x-sidebar-item route="traceability.load-recall" icon="alert-triangle">Recall per Load</x-sidebar-item>
                 @endcan
 
                 @can('sterilization-batches.view')
@@ -98,6 +99,11 @@
                 @endcan
             </div>
         </div>
+
+        {{-- Laporan --}}
+        @can('reports.view')
+            <x-sidebar-item route="reports.index" icon="bar-chart">Laporan</x-sidebar-item>
+        @endcan
 
         {{-- Data Master --}}
         <div class="mt-1" x-data="{ open: {{ $masterDataActive ? 'true' : 'false' }} }">

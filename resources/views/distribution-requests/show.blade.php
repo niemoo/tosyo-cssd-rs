@@ -30,8 +30,8 @@
                 ]))
                 @php
                     $hasReturnable = $distributionRequest->items
-                        ->filter(fn($item) => $item->tray && $item->tray->status === \App\Models\Tray::STATUS_IN_USE)
-                        ->isNotEmpty();
+                        ->flatMap->trays
+                        ->contains(fn($t) => $t->status === \App\Models\Tray::STATUS_IN_USE);
                 @endphp
                 @if ($hasReturnable)
                     <a href="{{ route('tray-returns.create', $distributionRequest) }}"
@@ -144,25 +144,27 @@
                 </div>
                 <div class="divide-y divide-gray-50">
                     @foreach ($distributionRequest->items as $item)
-                        <div class="flex items-center justify-between px-5 py-3">
+                        @php $assignedCount = $item->trays->count(); @endphp
+                        <div class="flex items-start justify-between px-5 py-3">
                             <div>
                                 <div class="text-sm font-medium text-gray-900">
                                     {{ $item->template?->name ?? 'Tidak spesifik' }}
                                 </div>
-                                @if ($item->tray)
-                                    <div class="text-xs text-gray-400">
-                                        Tray: {{ $item->tray->code }} — {{ $item->tray->name }}
+                                @foreach ($item->trays as $t)
+                                    <div class="mt-0.5 flex items-center gap-1.5 text-xs text-gray-500">
+                                        <span>{{ $t->code }} — {{ $t->name }}</span>
+                                        <x-badge :color="\App\Models\Tray::STATUSES[$t->status]['color'] ?? 'gray'">{{ \App\Models\Tray::STATUSES[$t->status]['label'] ?? $t->status }}</x-badge>
                                     </div>
-                                @endif
+                                @endforeach
                                 @if ($item->notes)
                                     <div class="text-[10px] italic text-gray-400">{{ $item->notes }}</div>
                                 @endif
                             </div>
-                            <div class="text-right">
-                                <span class="text-sm font-bold text-gray-900">{{ $item->quantity }}</span>
+                            <div class="shrink-0 text-right">
+                                <span class="text-sm font-bold text-gray-900">{{ $assignedCount }}/{{ $item->quantity }}</span>
                                 <span class="text-xs text-gray-400"> unit</span>
-                                @if (!$item->tray && in_array($distributionRequest->status, ['APPROVED', 'IN_PROCESS']))
-                                    <div class="mt-0.5"><x-badge color="amber">Belum di-assign</x-badge></div>
+                                @if ($assignedCount < $item->quantity && in_array($distributionRequest->status, ['APPROVED', 'IN_PROCESS', 'DRAFT', 'PENDING_APPROVAL']))
+                                    <div class="mt-0.5"><x-badge color="amber">Kurang {{ $item->quantity - $assignedCount }}</x-badge></div>
                                 @endif
                             </div>
                         </div>

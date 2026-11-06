@@ -48,35 +48,18 @@
             </div>
 
             @if ($multiHospital)
-                <select name="hospital_id"
-                    class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                    <option value="">Semua RS Saya</option>
-                    @foreach ($userHospitals as $hospital)
-                        <option value="{{ $hospital->id }}"
-                            {{ request('hospital_id') == $hospital->id ? 'selected' : '' }}>
-                            {{ $hospital->name }}
-                        </option>
-                    @endforeach
-                </select>
+                <x-searchable-select name="hospital_id" placeholder="Semua RS Saya"
+                    :options="$userHospitals->map(fn ($h) => ['id' => (string) $h->id, 'label' => $h->name])->values()"
+                    :selected="request('hospital_id')" />
             @endif
 
-            <select name="consumable_id"
-                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                <option value="">Semua Consumable</option>
-                @foreach ($consumables as $consumable)
-                    <option value="{{ $consumable->id }}"
-                        {{ request('consumable_id') == $consumable->id ? 'selected' : '' }}>
-                        {{ $consumable->name }}
-                    </option>
-                @endforeach
-            </select>
+            <x-searchable-select name="consumable_id" placeholder="Semua Consumable"
+                :options="$consumables->map(fn ($c) => ['id' => (string) $c->id, 'label' => $c->name])->values()"
+                :selected="request('consumable_id')" />
 
-            <select name="type"
-                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                <option value="">Semua Tipe</option>
-                <option value="IN" {{ request('type') === 'IN' ? 'selected' : '' }}>Masuk (IN)</option>
-                <option value="OUT" {{ request('type') === 'OUT' ? 'selected' : '' }}>Keluar (OUT)</option>
-            </select>
+            <x-searchable-select name="type" placeholder="Semua Tipe"
+                :options="[['id' => 'IN', 'label' => 'Masuk (IN)'], ['id' => 'OUT', 'label' => 'Keluar (OUT)']]"
+                :selected="request('type')" />
 
             <button type="submit"
                 class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700">

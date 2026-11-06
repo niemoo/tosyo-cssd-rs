@@ -48,7 +48,31 @@
         $oldReturns = old('returns', []);
     @endphp
 
-    <form method="POST" action="{{ route('tray-returns.store', $distributionRequest) }}">
+    <form method="POST" action="{{ route('tray-returns.store', $distributionRequest) }}" x-data="{
+        returnableTrays: {{ json_encode($returnableTrays->map(fn ($t) => ['id' => (string) $t->id, 'code' => $t->code, 'barcode' => $t->barcode])->values()) }},
+        scanCode: '',
+        scanMessage: '',
+        scanTray() {
+            const code = this.scanCode.trim();
+            this.scanCode = '';
+            if (!code) return;
+
+            const match = this.returnableTrays.find((t) => t.code === code || t.barcode === code);
+
+            if (!match) {
+                this.scanMessage = `Tray ${code} tidak ditemukan di antara tray yang sedang digunakan.`;
+                return;
+            }
+
+            const row = document.getElementById('tray-return-row-' + match.id);
+            if (row) {
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                row.classList.add('ring-2', 'ring-primary-400');
+                setTimeout(() => row.classList.remove('ring-2', 'ring-primary-400'), 2500);
+            }
+            this.scanMessage = `Tray ${match.code} disorot di bawah — pilih kondisinya.`;
+        },
+    }">
         @csrf
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -65,17 +89,31 @@
                             </svg>
                         </div>
                         <h3 class="text-sm font-bold text-gray-900">Tray yang Dikembalikan</h3>
-                        <span class="ml-auto text-xs text-gray-400">{{ $returnableItems->count() }} tray sedang
+                        <span class="ml-auto text-xs text-gray-400">{{ $returnableTrays->count() }} tray sedang
                             digunakan</span>
                     </div>
 
+                    {{-- Scan kode/barcode tray — pola scanner: HID mengetik lalu Enter. --}}
+                    <div class="border-b border-gray-50 bg-blue-50/40 px-5 py-3">
+                        <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                            Scan Tray
+                        </label>
+                        <input type="text" x-model="scanCode" x-ref="scanInput" autofocus
+                            @keydown.enter.prevent="scanTray(); $refs.scanInput.focus()"
+                            placeholder="Scan kode/barcode tray lalu Enter..."
+                            class="w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 transition
+                                   focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20" />
+                        <p x-show="scanMessage" x-text="scanMessage" x-cloak class="mt-1.5 text-xs text-gray-500"></p>
+                    </div>
+
                     <div class="p-5 space-y-4">
-                        @foreach ($returnableItems as $index => $item)
+                        @foreach ($returnableTrays as $index => $tray)
                             @php
-                                $tray = $item->tray;
                                 $oldCondition = $oldReturns[$index]['condition'] ?? 'GOOD';
                             @endphp
-                            <div class="rounded-lg border border-gray-200 p-4" x-data="{ condition: '{{ $oldCondition }}' }">
+                            <div id="tray-return-row-{{ $tray->id }}"
+                                class="rounded-lg border border-gray-200 p-4 transition"
+                                x-data="{ condition: '{{ $oldCondition }}' }">
 
                                 <input type="hidden" name="returns[{{ $index }}][tray_id]"
                                     value="{{ $tray->id }}" />

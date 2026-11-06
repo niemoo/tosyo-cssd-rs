@@ -46,18 +46,10 @@
                                 Rumah Sakit <span class="text-red-500">*</span>
                             </label>
                             @if ($userHospitals->count() > 1)
-                                <select name="hospital_id"
-                                    class="w-full rounded-lg border bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
-                                               focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20
-                                               {{ $errors->has('hospital_id') ? 'border-red-400' : 'border-gray-200' }}">
-                                    <option value="">Pilih Rumah Sakit</option>
-                                    @foreach ($userHospitals as $hospital)
-                                        <option value="{{ $hospital->id }}"
-                                            {{ old('hospital_id', session('active_hospital_id')) == $hospital->id ? 'selected' : '' }}>
-                                            {{ $hospital->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select name="hospital_id" placeholder="Pilih Rumah Sakit"
+                                    :options="$userHospitals->map(fn ($h) => ['id' => (string) $h->id, 'label' => $h->name])->values()"
+                                    :selected="old('hospital_id', session('active_hospital_id'))"
+                                    :error="$errors->has('hospital_id')" />
                             @else
                                 <input type="hidden" name="hospital_id" value="{{ $userHospitals->first()->id }}" />
                                 <input type="text" value="{{ $userHospitals->first()->name }}" disabled
@@ -74,18 +66,9 @@
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                 Kategori <span class="text-red-500">*</span>
                             </label>
-                            <select name="category_id"
-                                class="w-full rounded-lg border bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
-                                           focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20
-                                           {{ $errors->has('category_id') ? 'border-red-400' : 'border-gray-200' }}">
-                                <option value="">Pilih Kategori</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}"
-                                        {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select name="category_id" placeholder="Pilih Kategori"
+                                :options="$categories->map(fn ($c) => ['id' => (string) $c->id, 'label' => $c->name])->values()"
+                                :selected="old('category_id')" :error="$errors->has('category_id')" />
                             @error('category_id')
                                 <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror
@@ -126,17 +109,9 @@
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                 Satuan <span class="text-red-500">*</span>
                             </label>
-                            <select name="unit"
-                                class="w-full rounded-lg border bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
-                                           focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20
-                                           {{ $errors->has('unit') ? 'border-red-400' : 'border-gray-200' }}">
-                                <option value="">Pilih Satuan</option>
-                                @foreach ($units as $key => $label)
-                                    <option value="{{ $key }}" {{ old('unit') === $key ? 'selected' : '' }}>
-                                        {{ $label }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select name="unit" placeholder="Pilih Satuan"
+                                :options="collect($units)->map(fn ($label, $key) => ['id' => $key, 'label' => $label])->values()"
+                                :selected="old('unit')" :error="$errors->has('unit')" />
                             @error('unit')
                                 <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror

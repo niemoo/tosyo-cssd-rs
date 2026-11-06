@@ -51,34 +51,18 @@
             </div>
 
             @if ($multiHospital)
-                <select name="hospital_id"
-                    class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                    <option value="">Semua RS</option>
-                    @foreach ($userHospitals as $h)
-                        <option value="{{ $h->id }}" {{ request('hospital_id') == $h->id ? 'selected' : '' }}>
-                            {{ $h->name }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select name="hospital_id" placeholder="Semua RS"
+                    :options="$userHospitals->map(fn ($h) => ['id' => (string) $h->id, 'label' => $h->name])->values()"
+                    :selected="request('hospital_id')" />
             @endif
 
-            <select name="status"
-                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                <option value="">Semua Status</option>
-                @foreach (\App\Models\Tray::STATUSES as $key => $val)
-                    <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>
-                        {{ $val['label'] }}</option>
-                @endforeach
-            </select>
+            <x-searchable-select name="status" placeholder="Semua Status"
+                :options="collect(\App\Models\Tray::STATUSES)->map(fn ($val, $key) => ['id' => $key, 'label' => $val['label']])->values()"
+                :selected="request('status')" />
 
-            <select name="template_id"
-                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                <option value="">Semua Template</option>
-                <option value="free" {{ request('template_id') === 'free' ? 'selected' : '' }}>Tray Bebas</option>
-                @foreach ($templates as $t)
-                    <option value="{{ $t->id }}" {{ request('template_id') == $t->id ? 'selected' : '' }}>
-                        {{ $t->name }}</option>
-                @endforeach
-            </select>
+            <x-searchable-select name="template_id" placeholder="Semua Template"
+                :options="collect([['id' => 'free', 'label' => 'Tray Bebas']])->concat($templates->map(fn ($t) => ['id' => (string) $t->id, 'label' => $t->name]))"
+                :selected="request('template_id')" />
 
             <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-500">
                 <input type="checkbox" name="show_deleted" value="1"
@@ -234,6 +218,54 @@
                                                     </svg>
                                                     Edit
                                                 </a>
+                                            @endif
+
+                                            @if ($tray->canBeMarkedReady())
+                                                <form method="POST" action="{{ route('trays.ready', $tray) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit"
+                                                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50">
+                                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor"
+                                                            stroke-width="2" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        Tandai Siap Sterilisasi
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            @if ($tray->canBeReprocessed())
+                                                <form method="POST" action="{{ route('trays.reprocess', $tray) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit"
+                                                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-blue-600 hover:bg-blue-50">
+                                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor"
+                                                            stroke-width="2" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                        </svg>
+                                                        Proses Ulang
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            @if ($tray->canBeUnpacked())
+                                                <form method="POST" action="{{ route('trays.unpack', $tray) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit"
+                                                        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-blue-600 hover:bg-blue-50">
+                                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor"
+                                                            stroke-width="2" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M20 12H4" />
+                                                        </svg>
+                                                        Buka Kemasan
+                                                    </button>
+                                                </form>
                                             @endif
                                         @endcan
 

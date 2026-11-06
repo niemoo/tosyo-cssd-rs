@@ -8,28 +8,55 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SterilizationBatch extends Model
 {
-    use SoftDeletes, HasAuditColumns;
+    use HasAuditColumns, SoftDeletes;
 
-    const STATUS_PENDING     = 'PENDING';
+    const STATUS_PENDING = 'PENDING';
+
     const STATUS_IN_PROGRESS = 'IN_PROGRESS';
-    const STATUS_COMPLETED   = 'COMPLETED';
-    const STATUS_FAILED      = 'FAILED';
+
+    const STATUS_COMPLETED = 'COMPLETED';
+
+    const STATUS_FAILED = 'FAILED';
 
     const STATUSES = [
-        self::STATUS_PENDING     => ['label' => 'Menunggu',       'color' => 'gray'],
+        self::STATUS_PENDING => ['label' => 'Menunggu',       'color' => 'gray'],
         self::STATUS_IN_PROGRESS => ['label' => 'Berjalan',       'color' => 'blue'],
-        self::STATUS_COMPLETED   => ['label' => 'Selesai',        'color' => 'green'],
-        self::STATUS_FAILED      => ['label' => 'Gagal',          'color' => 'red'],
+        self::STATUS_COMPLETED => ['label' => 'Selesai',        'color' => 'green'],
+        self::STATUS_FAILED => ['label' => 'Gagal',          'color' => 'red'],
+    ];
+
+    // Indikator Biologis (uji spora): NEGATIVE = tidak ada pertumbuhan = steril.
+    const BI_PENDING = 'PENDING';
+
+    const BI_NEGATIVE = 'NEGATIVE';
+
+    const BI_POSITIVE = 'POSITIVE';
+
+    const BI_RESULTS = [
+        self::BI_PENDING => ['label' => 'Menunggu Inkubasi', 'color' => 'gray'],
+        self::BI_NEGATIVE => ['label' => 'Negatif (Steril)',  'color' => 'green'],
+        self::BI_POSITIVE => ['label' => 'Positif (Gagal)',   'color' => 'red'],
+    ];
+
+    // Uji Bowie-Dick (harian, mesin pra-vakum).
+    const BOWIE_DICK = [
+        'PASS' => ['label' => 'Lulus',           'color' => 'green'],
+        'FAIL' => ['label' => 'Gagal',           'color' => 'red'],
+        'NA' => ['label' => 'Tidak Berlaku',   'color' => 'gray'],
     ];
 
     protected $fillable = [
         'hospital_id',
         'sterilizer_id',
+        'method',
         'batch_number',
+        'load_number',
         'status',
         'temperature',
         'pressure',
         'duration_minutes',
+        'bi_result',
+        'bowie_dick_result',
         'operator_id',
         'started_at',
         'completed_at',
@@ -42,12 +69,12 @@ class SterilizationBatch extends Model
     protected function casts(): array
     {
         return [
-            'temperature'      => 'decimal:2',
-            'pressure'         => 'decimal:2',
+            'temperature' => 'decimal:2',
+            'pressure' => 'decimal:2',
             'duration_minutes' => 'integer',
-            'started_at'       => 'datetime',
-            'completed_at'     => 'datetime',
-            'deleted_at'       => 'datetime',
+            'started_at' => 'datetime',
+            'completed_at' => 'datetime',
+            'deleted_at' => 'datetime',
         ];
     }
 
@@ -75,8 +102,8 @@ class SterilizationBatch extends Model
     public function trays()
     {
         return $this->belongsToMany(Tray::class, 'sterilization_batch_items', 'batch_id', 'tray_id')
-                    ->withPivot('result', 'failure_notes')
-                    ->withTimestamps();
+            ->withPivot('result', 'failure_notes')
+            ->withTimestamps();
     }
 
     public function consumableUsages()
@@ -88,6 +115,22 @@ class SterilizationBatch extends Model
     public function getStatusLabelAttribute(): string
     {
         return self::STATUSES[$this->status]['label'] ?? $this->status;
+    }
+
+    public function getBiLabelAttribute(): string
+    {
+        return self::BI_RESULTS[$this->bi_result]['label'] ?? '-';
+    }
+
+    public function getBiColorAttribute(): string
+    {
+        return self::BI_RESULTS[$this->bi_result]['color'] ?? 'gray';
+    }
+
+    // BI positif = uji spora tumbuh = seluruh load dianggap gagal, tray tak boleh diluluskan.
+    public function biBlocksRelease(): bool
+    {
+        return $this->bi_result === self::BI_POSITIVE;
     }
 
     public function getStatusColorAttribute(): string

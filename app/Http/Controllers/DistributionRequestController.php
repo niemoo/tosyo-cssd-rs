@@ -2,36 +2,39 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ApproveDistributionRequestRequest;
 use App\Http\Requests\FulfillDistributionRequestRequest;
+use App\Http\Requests\StoreDistributionRequestRequest;
+use App\Http\Requests\UpdateDistributionRequestRequest;
 use App\Models\DistributionRequest;
 use App\Models\DistributionRequestItem;
 use App\Models\Tray;
 use App\Models\TrayTemplate;
 use App\Models\Unit;
-use App\Http\Requests\StoreDistributionRequestRequest;
-use App\Http\Requests\UpdateDistributionRequestRequest;
-use App\Http\Requests\ApproveDistributionRequestRequest;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
+use App\Services\TrayService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class DistributionRequestController extends Controller
 {
     public function index(Request $request): View
     {
-        $sortBy  = $request->get('sort', 'created_at');
+        $sortBy = $request->get('sort', 'created_at');
         $sortDir = $request->get('direction', 'desc');
 
         $allowedSorts = ['request_number', 'status', 'requested_at', 'created_at'];
-        if (!in_array($sortBy, $allowedSorts)) $sortBy = 'created_at';
+        if (! in_array($sortBy, $allowedSorts)) {
+            $sortBy = 'created_at';
+        }
 
-        $userHospitals   = auth()->user()->hospitals()->wherePivot('is_active', true)->get();
-        $multiHospital   = $userHospitals->count() > 1;
+        $userHospitals = auth()->user()->hospitals()->wherePivot('is_active', true)->get();
+        $multiHospital = $userHospitals->count() > 1;
         $userHospitalIds = $userHospitals->pluck('id')->toArray();
 
         $query = DistributionRequest::with(['hospital', 'unit', 'requester', 'approver', 'items'])
-                                    ->withTrashed($request->boolean('show_deleted'));
+            ->withTrashed($request->boolean('show_deleted'));
 
         if ($multiHospital) {
             $request->filled('hospital_id')
@@ -44,7 +47,7 @@ class DistributionRequestController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('request_number', 'like', "%{$request->search}%")
-                  ->orWhereHas('unit', fn($u) => $u->where('name', 'like', "%{$request->search}%"));
+                    ->orWhereHas('unit', fn ($u) => $u->where('name', 'like', "%{$request->search}%"));
             });
         }
 
@@ -61,16 +64,16 @@ class DistributionRequestController extends Controller
 
         $statsQuery = DistributionRequest::whereIn('hospital_id', $userHospitalIds);
         $stats = [
-            'total'             => (clone $statsQuery)->count(),
-            'pending_approval'  => (clone $statsQuery)->where('status', DistributionRequest::STATUS_PENDING_APPROVAL)->count(),
-            'approved'          => (clone $statsQuery)->where('status', DistributionRequest::STATUS_APPROVED)->count(),
-            'fulfilled'         => (clone $statsQuery)->where('status', DistributionRequest::STATUS_FULFILLED)->count(),
+            'total' => (clone $statsQuery)->count(),
+            'pending_approval' => (clone $statsQuery)->where('status', DistributionRequest::STATUS_PENDING_APPROVAL)->count(),
+            'approved' => (clone $statsQuery)->where('status', DistributionRequest::STATUS_APPROVED)->count(),
+            'fulfilled' => (clone $statsQuery)->where('status', DistributionRequest::STATUS_FULFILLED)->count(),
         ];
 
         $units = Unit::whereIn('hospital_id', $userHospitalIds)
-                     ->where('is_active', true)
-                     ->orderBy('name')
-                     ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         return view('distribution-requests.index', compact(
             'requests', 'stats', 'units',
@@ -85,22 +88,22 @@ class DistributionRequestController extends Controller
 
         if ($userHospitals->isEmpty()) {
             return redirect()->route('distribution-requests.index')
-                             ->with('error', 'Anda tidak terdaftar di rumah sakit aktif manapun. Hubungi administrator.');
+                ->with('error', 'Anda tidak terdaftar di rumah sakit aktif manapun. Hubungi administrator.');
         }
 
-        $hospitalId    = session('active_hospital_id');
+        $hospitalId = session('active_hospital_id');
 
         $units = Unit::where('hospital_id', $hospitalId)
-                     ->where('is_active', true)
-                     ->orderBy('name')
-                     ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $templates = TrayTemplate::where('hospital_id', $hospitalId)
-                                 ->where('is_active', true)
-                                 ->orderBy('name')
-                                 ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
-        $requestNumber = 'REQ-' . date('Y') . '-' . str_pad(
+        $requestNumber = 'REQ-'.date('Y').'-'.str_pad(
             DistributionRequest::where('hospital_id', $hospitalId)->count() + 1,
             3, '0', STR_PAD_LEFT
         );
@@ -118,24 +121,24 @@ class DistributionRequestController extends Controller
                 : DistributionRequest::STATUS_DRAFT;
 
             $distributionRequest = DistributionRequest::create([
-                'hospital_id'    => $request->hospital_id,
-                'unit_id'        => $request->unit_id,
-                'request_number' => 'REQ-' . date('Y') . '-' . str_pad(
+                'hospital_id' => $request->hospital_id,
+                'unit_id' => $request->unit_id,
+                'request_number' => 'REQ-'.date('Y').'-'.str_pad(
                     DistributionRequest::where('hospital_id', $request->hospital_id)->count() + 1,
                     3, '0', STR_PAD_LEFT
                 ),
-                'status'         => $status,
-                'requested_by'   => auth()->id(),
-                'requested_at'   => now(),
-                'notes'          => $request->notes,
+                'status' => $status,
+                'requested_by' => auth()->id(),
+                'requested_at' => now(),
+                'notes' => $request->notes,
             ]);
 
             foreach ($request->items as $item) {
                 DistributionRequestItem::create([
-                    'request_id'  => $distributionRequest->id,
+                    'request_id' => $distributionRequest->id,
                     'template_id' => $item['template_id'] ?? null,
-                    'quantity'    => $item['quantity'],
-                    'notes'       => $item['notes'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'notes' => $item['notes'] ?? null,
                 ]);
             }
         });
@@ -151,7 +154,7 @@ class DistributionRequestController extends Controller
     {
         $distributionRequest->load([
             'hospital', 'unit', 'requester', 'approver', 'fulfiller',
-            'items.template', 'items.tray',
+            'items.template', 'items.trays',
             'trayReturns.tray', 'trayReturns.receiver',
         ]);
 
@@ -161,21 +164,21 @@ class DistributionRequestController extends Controller
     public function edit(DistributionRequest $distributionRequest): View
     {
         abort_if(
-            !in_array($distributionRequest->status, [DistributionRequest::STATUS_DRAFT, DistributionRequest::STATUS_REJECTED]),
+            ! in_array($distributionRequest->status, [DistributionRequest::STATUS_DRAFT, DistributionRequest::STATUS_REJECTED]),
             403, 'Permintaan hanya bisa diedit saat status Draft atau Ditolak.'
         );
 
         $userHospitals = auth()->user()->hospitals()->wherePivot('is_active', true)->get();
 
         $units = Unit::where('hospital_id', $distributionRequest->hospital_id)
-                     ->where('is_active', true)
-                     ->orderBy('name')
-                     ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $templates = TrayTemplate::where('hospital_id', $distributionRequest->hospital_id)
-                                 ->where('is_active', true)
-                                 ->orderBy('name')
-                                 ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $distributionRequest->load('items');
 
@@ -187,7 +190,7 @@ class DistributionRequestController extends Controller
     public function update(UpdateDistributionRequestRequest $request, DistributionRequest $distributionRequest): RedirectResponse
     {
         abort_if(
-            !in_array($distributionRequest->status, [DistributionRequest::STATUS_DRAFT, DistributionRequest::STATUS_REJECTED]),
+            ! in_array($distributionRequest->status, [DistributionRequest::STATUS_DRAFT, DistributionRequest::STATUS_REJECTED]),
             403, 'Permintaan hanya bisa diedit saat status Draft atau Ditolak.'
         );
 
@@ -198,13 +201,13 @@ class DistributionRequestController extends Controller
                 : DistributionRequest::STATUS_DRAFT;
 
             $distributionRequest->update([
-                'unit_id'         => $request->unit_id,
-                'status'          => $status,
-                'notes'           => $request->notes,
-                'revision_notes'  => $wasRejected && $request->submit_type === 'submit' ? 'Direvisi dan diajukan ulang' : $distributionRequest->revision_notes,
+                'unit_id' => $request->unit_id,
+                'status' => $status,
+                'notes' => $request->notes,
+                'revision_notes' => $wasRejected && $request->submit_type === 'submit' ? 'Direvisi dan diajukan ulang' : $distributionRequest->revision_notes,
                 'rejection_notes' => $status === DistributionRequest::STATUS_PENDING_APPROVAL ? null : $distributionRequest->rejection_notes,
-                'approved_by'     => null,
-                'approved_at'     => null,
+                'approved_by' => null,
+                'approved_at' => null,
             ]);
 
             // Hapus items lama, insert ulang
@@ -212,10 +215,10 @@ class DistributionRequestController extends Controller
 
             foreach ($request->items as $item) {
                 DistributionRequestItem::create([
-                    'request_id'  => $distributionRequest->id,
+                    'request_id' => $distributionRequest->id,
                     'template_id' => $item['template_id'] ?? null,
-                    'quantity'    => $item['quantity'],
-                    'notes'       => $item['notes'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'notes' => $item['notes'] ?? null,
                 ]);
             }
         });
@@ -237,7 +240,7 @@ class DistributionRequestController extends Controller
         $distributionRequest->delete();
 
         return redirect()->route('distribution-requests.index')
-                         ->with('success', 'Permintaan berhasil dihapus.');
+            ->with('success', 'Permintaan berhasil dihapus.');
     }
 
     public function restore(int $id): RedirectResponse
@@ -245,119 +248,162 @@ class DistributionRequestController extends Controller
         DistributionRequest::onlyTrashed()->findOrFail($id)->restore();
 
         return redirect()->route('distribution-requests.index')
-                         ->with('success', 'Permintaan berhasil dipulihkan.');
+            ->with('success', 'Permintaan berhasil dipulihkan.');
     }
 
     public function approve(ApproveDistributionRequestRequest $request, DistributionRequest $distributionRequest): RedirectResponse
     {
         abort_if(
-            !$distributionRequest->canBeApproved(),
+            ! $distributionRequest->canBeApproved(),
             403, 'Permintaan ini tidak dapat diproses (sudah bukan status Menunggu Approval).'
         );
 
         if ($request->decision === 'approve') {
             $distributionRequest->update([
-                'status'      => DistributionRequest::STATUS_APPROVED,
+                'status' => DistributionRequest::STATUS_APPROVED,
                 'approved_by' => auth()->id(),
                 'approved_at' => now(),
             ]);
             $message = 'Permintaan berhasil disetujui.';
         } else {
             $distributionRequest->update([
-                'status'          => DistributionRequest::STATUS_REJECTED,
-                'approved_by'     => auth()->id(),
-                'approved_at'     => now(),
+                'status' => DistributionRequest::STATUS_REJECTED,
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
                 'rejection_notes' => $request->rejection_notes,
             ]);
             $message = 'Permintaan berhasil ditolak.';
         }
 
         return redirect()->route('distribution-requests.show', $distributionRequest)
-                         ->with('success', $message);
+            ->with('success', $message);
     }
 
     public function fulfill(DistributionRequest $distributionRequest): View
     {
         abort_if(
-            !$distributionRequest->canBeFulfilled(),
+            ! $distributionRequest->canBeFulfilled(),
             403, 'Permintaan ini belum bisa diproses (status harus Disetujui atau Diproses).'
         );
 
-        $distributionRequest->load(['items.template', 'items.tray']);
+        $distributionRequest->load(['items.template', 'items.trays']);
 
-        // Tray steril yang tersedia (belum di-assign ke request manapun yang masih aktif)
+        // Tray steril yang tersedia & belum kedaluwarsa.
         $availableTrays = Tray::where('hospital_id', $distributionRequest->hospital_id)
-                            ->where('status', Tray::STATUS_STERILE)
-                            ->where('is_active', true)
-                            ->with('template')
-                            ->orderBy('code')
-                            ->get();
+            ->where('status', Tray::STATUS_STERILE)
+            ->where('is_active', true)
+            ->where(fn ($q) => $q->whereNull('expiry_at')->orWhere('expiry_at', '>', now()))
+            ->with('template')
+            ->orderBy('expiry_at') // FEFO: yang paling cepat kedaluwarsa didahulukan
+            ->orderBy('code')
+            ->get();
 
-        $trayOptions = $availableTrays->map(fn($t) => [
-            'id'          => (string) $t->id,
-            'label'       => $t->code . ' — ' . $t->name . ($t->template ? ' (' . $t->template->name . ')' : ' (Bebas)'),
+        $trayOptions = $availableTrays->map(fn ($t) => [
+            'id' => (string) $t->id,
+            'code' => $t->code,
+            'barcode' => $t->barcode,
+            'label' => $t->code.' — '.$t->name.($t->template ? ' ('.$t->template->name.')' : ' (Bebas)')
+                .($t->expiry_at ? ' · exp '.$t->expiry_at->format('d/m/Y') : ''),
             'template_id' => $t->template_id ? (string) $t->template_id : null,
-        ])->values()->toJson();
+        ])->values();
 
         return view('distribution-requests.fulfill', compact(
             'distributionRequest', 'availableTrays', 'trayOptions'
         ));
     }
 
+    /** Ratakan payload assignments[<item_id>][] menjadi daftar pasangan {item_id, tray_id}. */
+    private function flattenAssignments(array $assignments): array
+    {
+        $flat = [];
+        foreach ($assignments as $itemId => $trayIds) {
+            foreach ((array) $trayIds as $trayId) {
+                if (empty($trayId)) {
+                    continue;
+                }
+                $flat[] = ['item_id' => (int) $itemId, 'tray_id' => (int) $trayId];
+            }
+        }
+
+        return $flat;
+    }
+
     public function processFulfillment(FulfillDistributionRequestRequest $request, DistributionRequest $distributionRequest): RedirectResponse
     {
         abort_if(
-            !$distributionRequest->canBeFulfilled(),
+            ! $distributionRequest->canBeFulfilled(),
             403, 'Permintaan ini belum bisa diproses.'
         );
 
-        $assignments = $request->input('assignments', []);
+        $flat = $this->flattenAssignments($request->input('assignments', []));
 
-        if (empty($assignments)) {
-            return redirect()->route('distribution-requests.fulfill', $distributionRequest)
-                            ->withErrors(['assignments' => 'Pilih minimal 1 tray untuk di-assign sebelum mengirim.'])
-                            ->withInput();
+        $fail = fn (string $msg) => redirect()->route('distribution-requests.fulfill', $distributionRequest)
+            ->withErrors(['assignments' => $msg])->withInput();
+
+        if (empty($flat)) {
+            return $fail('Pilih minimal 1 tray untuk di-assign sebelum mengirim.');
         }
 
-        // Cek duplikasi tray_id (tray yang sama tidak boleh dipilih untuk 2 item berbeda)
-        $trayIds = array_column($assignments, 'tray_id');
+        // Satu tray tidak boleh dipilih lebih dari sekali dalam pengiriman ini.
+        $trayIds = array_column($flat, 'tray_id');
         if (count($trayIds) !== count(array_unique($trayIds))) {
-            return redirect()->route('distribution-requests.fulfill', $distributionRequest)
-                            ->withErrors(['assignments' => 'Satu tray tidak boleh di-assign ke lebih dari satu item.'])
-                            ->withInput();
+            return $fail('Satu tray tidak boleh dipilih untuk lebih dari satu slot.');
         }
 
-        // Validasi semua tray masih STERILE & milik hospital yang sama
-        $trays = Tray::whereIn('id', $trayIds)->get();
-        foreach ($trays as $tray) {
-            if ($tray->status !== Tray::STATUS_STERILE || $tray->hospital_id !== $distributionRequest->hospital_id) {
-                return redirect()->route('distribution-requests.fulfill', $distributionRequest)
-                                ->withErrors(['assignments' => "Tray {$tray->code} sudah tidak tersedia (bukan berstatus Steril). Silakan pilih tray lain."])
-                                ->withInput();
+        $items = $distributionRequest->items()->with('template')->get()->keyBy('id');
+        $trays = Tray::whereIn('id', $trayIds)->get()->keyBy('id');
+
+        // Validasi tiap assignment: item milik permintaan, tray steril & belum kedaluwarsa,
+        // cocok template, dan tidak melebihi kuota (quantity) item.
+        $perItemNew = [];
+        foreach ($flat as $a) {
+            $item = $items->get($a['item_id']);
+            if (! $item) {
+                return $fail('Ada item yang tidak sesuai dengan permintaan ini.');
+            }
+
+            $tray = $trays->get($a['tray_id']);
+            if (! $tray || $tray->status !== Tray::STATUS_STERILE || $tray->hospital_id !== $distributionRequest->hospital_id) {
+                return $fail("Tray {$tray?->code} tidak tersedia (bukan berstatus Steril). Pilih tray lain.");
+            }
+            if ($tray->isExpired()) {
+                return $fail("Tray {$tray->code} sudah kedaluwarsa (steril s/d {$tray->expiry_at->format('d/m/Y')}). Proses ulang dulu.");
+            }
+            if ($item->template_id && $tray->template_id !== $item->template_id) {
+                return $fail("Tray {$tray->code} tidak sesuai jenis yang diminta ({$item->template?->name}).");
+            }
+
+            $perItemNew[$a['item_id']] = ($perItemNew[$a['item_id']] ?? 0) + 1;
+            if ($item->assignedCount() + $perItemNew[$a['item_id']] > $item->quantity) {
+                return $fail("Jumlah tray untuk {$item->template?->name} melebihi yang diminta ({$item->quantity} unit).");
             }
         }
 
-        DB::transaction(function () use ($assignments, $distributionRequest) {
-            foreach ($assignments as $assignment) {
-                $item = DistributionRequestItem::where('request_id', $distributionRequest->id)
-                                                ->findOrFail($assignment['item_id']);
+        DB::transaction(function () use ($flat, $items, $trays, $distributionRequest) {
+            foreach ($flat as $a) {
+                $item = $items->get($a['item_id']);
+                $tray = $trays->get($a['tray_id']);
 
-                $item->update(['tray_id' => $assignment['tray_id']]);
-
-                Tray::find($assignment['tray_id'])?->update([
-                    'status'          => Tray::STATUS_IN_USE,
-                    'current_rack_id' => null,
+                $item->trays()->attach($tray->id, [
+                    'issued_by' => auth()->id(),
+                    'issued_at' => now(),
                 ]);
+
+                TrayService::transitionTo(
+                    $tray, Tray::STATUS_IN_USE,
+                    reference: $distributionRequest,
+                    attributes: ['current_rack_id' => null],
+                );
             }
 
-            $allAssigned = $distributionRequest->items()->whereNull('tray_id')->doesntExist();
+            $fullyAssigned = $distributionRequest->isFullyAssigned();
 
             $distributionRequest->update([
-                'status'       => $allAssigned
+                'status' => $fullyAssigned
                     ? DistributionRequest::STATUS_FULFILLED
                     : DistributionRequest::STATUS_IN_PROCESS,
                 'fulfilled_by' => auth()->id(),
-                'fulfilled_at' => $allAssigned ? now() : $distributionRequest->fulfilled_at,
+                'fulfilled_at' => $fullyAssigned ? now() : $distributionRequest->fulfilled_at,
             ]);
         });
 
@@ -366,6 +412,6 @@ class DistributionRequestController extends Controller
             : 'Sebagian tray berhasil di-assign. Lanjutkan untuk item tersisa.';
 
         return redirect()->route('distribution-requests.show', $distributionRequest)
-                        ->with('success', $message);
+            ->with('success', $message);
     }
 }

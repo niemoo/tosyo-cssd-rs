@@ -8,24 +8,30 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DistributionRequest extends Model
 {
-    use SoftDeletes, HasAuditColumns;
+    use HasAuditColumns, SoftDeletes;
 
-    const STATUS_DRAFT            = 'DRAFT';
+    const STATUS_DRAFT = 'DRAFT';
+
     const STATUS_PENDING_APPROVAL = 'PENDING_APPROVAL';
-    const STATUS_APPROVED         = 'APPROVED';
-    const STATUS_REJECTED         = 'REJECTED';
-    const STATUS_IN_PROCESS       = 'IN_PROCESS';
-    const STATUS_FULFILLED        = 'FULFILLED';
-    const STATUS_CLOSED           = 'CLOSED';
+
+    const STATUS_APPROVED = 'APPROVED';
+
+    const STATUS_REJECTED = 'REJECTED';
+
+    const STATUS_IN_PROCESS = 'IN_PROCESS';
+
+    const STATUS_FULFILLED = 'FULFILLED';
+
+    const STATUS_CLOSED = 'CLOSED';
 
     const STATUSES = [
-        self::STATUS_DRAFT            => ['label' => 'Draft',              'color' => 'gray'],
+        self::STATUS_DRAFT => ['label' => 'Draft',              'color' => 'gray'],
         self::STATUS_PENDING_APPROVAL => ['label' => 'Menunggu Approval',  'color' => 'amber'],
-        self::STATUS_APPROVED         => ['label' => 'Disetujui',          'color' => 'blue'],
-        self::STATUS_REJECTED         => ['label' => 'Ditolak',            'color' => 'red'],
-        self::STATUS_IN_PROCESS       => ['label' => 'Diproses',           'color' => 'purple'],
-        self::STATUS_FULFILLED        => ['label' => 'Terpenuhi',          'color' => 'green'],
-        self::STATUS_CLOSED           => ['label' => 'Selesai',            'color' => 'teal'],
+        self::STATUS_APPROVED => ['label' => 'Disetujui',          'color' => 'blue'],
+        self::STATUS_REJECTED => ['label' => 'Ditolak',            'color' => 'red'],
+        self::STATUS_IN_PROCESS => ['label' => 'Diproses',           'color' => 'purple'],
+        self::STATUS_FULFILLED => ['label' => 'Terpenuhi',          'color' => 'green'],
+        self::STATUS_CLOSED => ['label' => 'Selesai',            'color' => 'teal'],
     ];
 
     protected $fillable = [
@@ -51,9 +57,9 @@ class DistributionRequest extends Model
     {
         return [
             'requested_at' => 'datetime',
-            'approved_at'  => 'datetime',
+            'approved_at' => 'datetime',
             'fulfilled_at' => 'datetime',
-            'deleted_at'   => 'datetime',
+            'deleted_at' => 'datetime',
         ];
     }
 
@@ -93,10 +99,25 @@ class DistributionRequest extends Model
         return $this->hasMany(TrayReturn::class);
     }
 
+    // Semua tray fisik yang di-issue ke permintaan ini (lewat pivot item↔tray).
+    public function issuedTrays()
+    {
+        return Tray::whereIn('id', function ($q) {
+            $q->select('tray_id')
+                ->from('distribution_request_item_trays')
+                ->whereIn('item_id', $this->items()->select('id'));
+        });
+    }
+
     // Helpers
     public function getStatusLabelAttribute(): string
     {
         return self::STATUSES[$this->status]['label'] ?? $this->status;
+    }
+
+    public function isFullyAssigned(): bool
+    {
+        return $this->items()->get()->every(fn ($item) => $item->isFullyAssigned());
     }
 
     public function getStatusColorAttribute(): string

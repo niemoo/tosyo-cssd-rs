@@ -48,8 +48,56 @@
         $oldAssignments = old('assignments', []);
     @endphp
 
-    <form method="POST" action="{{ route('distribution-requests.process-fulfillment', $distributionRequest) }}">
+    <form method="POST" action="{{ route('distribution-requests.process-fulfillment', $distributionRequest) }}"
+        x-data="{
+            trayOptions: {{ json_encode($trayOptions) }},
+            scanCode: '',
+            scanMessage: '',
+            scanTray() {
+                const code = this.scanCode.trim();
+                this.scanCode = '';
+                if (!code) return;
+
+                const match = this.trayOptions.find((t) => t.code === code || t.barcode === code);
+
+                if (!match) {
+                    this.scanMessage = `Tray ${code} tidak ditemukan di antara tray steril yang tersedia.`;
+                    return;
+                }
+
+                const selects = Array.from(document.querySelectorAll('select[data-tray-select]'));
+
+                if (selects.some((s) => s.value === match.id)) {
+                    this.scanMessage = `Tray ${match.code} sudah dipilih.`;
+                    return;
+                }
+
+                const candidates = selects.filter((s) => s.dataset.templateId === '' || s.dataset.templateId === (match.template_id ?? ''));
+                const emptySlot = candidates.find((s) => s.value === '');
+
+                if (!emptySlot) {
+                    this.scanMessage = `Tray ${match.code} tidak cocok dengan jenis yang diminta.`;
+                    return;
+                }
+
+                emptySlot.value = match.id;
+                this.scanMessage = `Tray ${match.code} diisi ke slot.`;
+            },
+        }">
         @csrf
+
+        {{-- Scan kode/barcode tray — pola scanner: HID mengetik lalu Enter. --}}
+        <div class="mb-4 rounded-xl border border-amber-100 bg-amber-50/40 p-4">
+            <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                Scan Tray
+            </label>
+            <input type="text" x-model="scanCode" x-ref="scanInput" autofocus
+                @keydown.enter.prevent="scanTray(); $refs.scanInput.focus()"
+                placeholder="Scan kode/barcode tray lalu Enter..."
+                class="w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 transition
+                       focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20" />
+            <p x-show="scanMessage" x-text="scanMessage" x-cloak class="mt-1.5 text-xs text-gray-500"></p>
+        </div>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
@@ -78,141 +126,73 @@
                             </div>
                         @endif
 
-                        @php $assignIndex = 0; @endphp
-
                         @foreach ($distributionRequest->items as $item)
-                            @if ($item->tray_id)
-                                {{-- Item sudah ter-assign --}}
-                                <div class="rounded-lg border border-green-100 bg-green-50 p-4">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <div class="text-sm font-semibold text-gray-900">
-                                                {{ $item->template?->name ?? 'Tidak spesifik' }}
-                                                <span class="text-xs text-gray-400">({{ $item->quantity }} unit)</span>
-                                            </div>
-                                            <div class="text-xs text-green-600">
-                                                ✓ Sudah di-assign: {{ $item->tray->code }} — {{ $item->tray->name }}
-                                            </div>
+                            @php
+                                $assigned = $item->trays;
+                                $remaining = max(0, $item->quantity - $assigned->count());
+
+                                // Hanya tray yang cocok jenisnya (atau tray bebas untuk item tanpa template).
+                                $itemTrayOptions = $item->template_id
+                                    ? $trayOptions->filter(fn ($t) => $t['template_id'] === (string) $item->template_id)->values()
+                                    : $trayOptions;
+
+                                $oldForItem = (array) old('assignments.' . $item->id, []);
+                            @endphp
+
+                            <div
+                                class="rounded-lg border p-4 {{ $remaining === 0 ? 'border-green-100 bg-green-50' : 'border-gray-200' }}">
+                                <div class="mb-2 flex items-center justify-between">
+                                    <div>
+                                        <div class="text-sm font-semibold text-gray-900">
+                                            {{ $item->template?->name ?? 'Tidak spesifik' }}
+                                            <span class="text-xs text-gray-400">({{ $assigned->count() }}/{{ $item->quantity }}
+                                                unit)</span>
                                         </div>
-                                        <x-badge color="green">Selesai</x-badge>
+                                        @if ($item->notes)
+                                            <div class="text-xs text-gray-400">{{ $item->notes }}</div>
+                                        @endif
                                     </div>
+                                    @if ($remaining === 0)
+                                        <x-badge color="green">Lengkap</x-badge>
+                                    @else
+                                        <x-badge color="amber">Kurang {{ $remaining }}</x-badge>
+                                    @endif
                                 </div>
-                            @else
-                                @php
-                                    $currentIndex = $assignIndex;
-                                    $oldSelectedId = $oldAssignments[$currentIndex]['tray_id'] ?? '';
-                                    $assignIndex++;
-                                @endphp
-                                {{-- Item belum ter-assign --}}
-                                <div class="relative rounded-lg border border-gray-200 p-4" x-data="{
-                                    open: false,
-                                    search: '',
-                                    selectedId: '{{ $oldSelectedId }}',
-                                    options: {{ $trayOptions }}.filter(o =>
-                                        {{ $item->template_id ? 'true' : 'false' }} ?
-                                        (o.template_id === '{{ $item->template_id }}' || !o.template_id) :
-                                        true
-                                    ),
-                                    get filtered() {
-                                        if (!this.search) return this.options;
-                                        const s = this.search.toLowerCase();
-                                        return this.options.filter(o => o.label.toLowerCase().includes(s));
-                                    },
-                                    get selectedLabel() {
-                                        const found = this.options.find(o => o.id === this.selectedId);
-                                        return found ? found.label : '';
-                                    },
-                                    pos: { top: 0, left: 0, width: 0 },
-                                    toggle(btn) {
-                                        if (this.open) { this.open = false; return; }
-                                        const rect = btn.getBoundingClientRect();
-                                        this.pos = { top: rect.bottom + 4, left: rect.left, width: rect.width };
-                                        this.open = true;
-                                        this.$nextTick(() => {
-                                            const inp = document.getElementById('fulfill-search-{{ $currentIndex }}');
-                                            if (inp) inp.focus();
-                                        });
-                                    },
-                                    choose(option) {
-                                        this.selectedId = option.id;
-                                        this.open = false;
-                                        this.search = '';
-                                    }
-                                }"
-                                    @click.outside="open = false" x-init="const mainEl = document.querySelector('main');
-                                    if (mainEl) mainEl.addEventListener('scroll', () => { if (open) open = false; }, { passive: true });">
 
-                                    <div class="mb-2 flex items-center justify-between">
-                                        <div>
-                                            <div class="text-sm font-semibold text-gray-900">
-                                                {{ $item->template?->name ?? 'Tidak spesifik' }}
-                                                <span class="text-xs text-gray-400">({{ $item->quantity }} unit)</span>
-                                            </div>
-                                            @if ($item->notes)
-                                                <div class="text-xs text-gray-400">{{ $item->notes }}</div>
-                                            @endif
-                                        </div>
-                                        <x-badge color="amber">Belum di-assign</x-badge>
-                                    </div>
-
-                                    <input type="hidden" name="assignments[{{ $currentIndex }}][item_id]"
-                                        value="{{ $item->id }}" />
-                                    <input type="hidden" name="assignments[{{ $currentIndex }}][tray_id]"
-                                        :value="selectedId" />
-
-                                    <button type="button" @click="toggle($el)"
-                                        class="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm transition
-                                                   hover:border-gray-300 focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                                        <span class="truncate" :class="selectedId ? 'text-gray-900' : 'text-gray-400'"
-                                            x-text="selectedId ? selectedLabel : 'Pilih tray steril...'"></span>
-                                        <svg class="ml-2 h-4 w-4 shrink-0 text-gray-400 transition"
-                                            :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                                            stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                {{-- Tray yang sudah dikirim untuk item ini --}}
+                                @foreach ($assigned as $t)
+                                    <div class="mb-1.5 flex items-center gap-1.5 text-xs text-green-700">
+                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
-                                    </button>
+                                        {{ $t->code }} — {{ $t->name }}
+                                    </div>
+                                @endforeach
 
-                                    <template x-teleport="#dropdown-portal">
-                                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
-                                            x-transition:enter-start="opacity-0 scale-95"
-                                            x-transition:enter-end="opacity-100 scale-100"
-                                            :style="`position: fixed; top: ${pos.top}px; left: ${pos.left}px; width: ${pos.width}px; z-index: 9999;`"
-                                            class="rounded-xl border border-gray-200 bg-white shadow-lg"
-                                            style="display: none;" x-cloak>
-                                            <div class="border-b border-gray-50 p-2">
-                                                <div
-                                                    class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                                                    <svg class="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none"
-                                                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                        <circle cx="11" cy="11" r="8" />
-                                                        <path stroke-linecap="round" d="m21 21-4.35-4.35" />
-                                                    </svg>
-                                                    <input type="text" x-model="search"
-                                                        id="fulfill-search-{{ $currentIndex }}"
-                                                        placeholder="Cari tray steril..." @click.stop
-                                                        @keydown.escape="open = false"
-                                                        class="w-full border-none bg-transparent p-0 text-xs text-gray-600 placeholder-gray-300 focus:ring-0 focus:outline-none" />
-                                                </div>
-                                            </div>
-                                            <div class="max-h-48 overflow-y-auto py-1">
-                                                <template x-for="option in filtered" :key="option.id">
-                                                    <button type="button" @click="choose(option)"
-                                                        class="flex w-full items-center px-3 py-2 text-left text-xs transition hover:bg-gray-50"
-                                                        :class="selectedId === option.id ?
-                                                            'bg-primary-50 text-primary-600 font-medium' :
-                                                            'text-gray-700'">
-                                                        <span x-text="option.label"></span>
-                                                    </button>
-                                                </template>
-                                                <div x-show="filtered.length === 0"
-                                                    class="px-3 py-4 text-center text-xs text-gray-400">
-                                                    Tray tidak ditemukan
-                                                </div>
-                                            </div>
+                                {{-- Slot tersisa --}}
+                                @if ($remaining > 0)
+                                    @if ($itemTrayOptions->isEmpty())
+                                        <p class="mt-2 text-xs text-amber-600">Belum ada tray steril berjenis ini yang
+                                            tersedia. Sterilkan tray dulu.</p>
+                                    @else
+                                        <div class="mt-2 space-y-2">
+                                            @for ($s = 0; $s < $remaining; $s++)
+                                                <select name="assignments[{{ $item->id }}][]"
+                                                    data-tray-select data-template-id="{{ $item->template_id ?? '' }}"
+                                                    class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 transition
+                                                              focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20">
+                                                    <option value="">— Pilih tray (slot {{ $s + 1 }}) —</option>
+                                                    @foreach ($itemTrayOptions as $opt)
+                                                        <option value="{{ $opt['id'] }}"
+                                                            @selected(($oldForItem[$s] ?? null) === $opt['id'])>{{ $opt['label'] }}</option>
+                                                    @endforeach
+                                                </select>
+                                            @endfor
                                         </div>
-                                    </template>
-                                </div>
-                            @endif
+                                    @endif
+                                @endif
+                            </div>
                         @endforeach
 
                     </div>

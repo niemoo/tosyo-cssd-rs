@@ -21,7 +21,29 @@
     <x-slot name="pageHeader">Buat Batch Sterilisasi</x-slot>
     <x-slot name="pageSubHeader">Masukkan tray ke dalam batch dan jalankan proses sterilisasi</x-slot>
 
-    <form method="POST" action="{{ route('sterilization-batches.store') }}" x-data="{ selectedTrays: [] }">
+    <form method="POST" action="{{ route('sterilization-batches.store') }}" x-data="{
+        selectedTrays: {{ json_encode(array_values(old('tray_ids', []))) }},
+        availableTrays: {{ json_encode($availableTrays->map(fn ($t) => ['id' => (string) $t->id, 'code' => $t->code, 'barcode' => $t->barcode])->values()) }},
+        scanCode: '',
+        scanMessage: '',
+        scanTray() {
+            const code = this.scanCode.trim();
+            this.scanCode = '';
+            if (!code) return;
+
+            const match = this.availableTrays.find((t) => t.code === code || t.barcode === code);
+
+            if (!match) {
+                this.scanMessage = 'Tray tidak ada di daftar siap sterilisasi.';
+                return;
+            }
+
+            if (!this.selectedTrays.includes(match.id)) {
+                this.selectedTrays.push(match.id);
+            }
+            this.scanMessage = 'Tray ' + match.code + ' ditambahkan ke batch.';
+        }
+    }">
         @csrf
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -48,18 +70,10 @@
                                 Rumah Sakit <span class="text-red-500">*</span>
                             </label>
                             @if ($userHospitals->count() > 1)
-                                <select name="hospital_id"
-                                    class="w-full rounded-lg border bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
-                                               focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20
-                                               {{ $errors->has('hospital_id') ? 'border-red-400' : 'border-gray-200' }}">
-                                    <option value="">Pilih Rumah Sakit</option>
-                                    @foreach ($userHospitals as $hospital)
-                                        <option value="{{ $hospital->id }}"
-                                            {{ old('hospital_id', session('active_hospital_id')) == $hospital->id ? 'selected' : '' }}>
-                                            {{ $hospital->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select name="hospital_id" placeholder="Pilih Rumah Sakit"
+                                    :options="$userHospitals->map(fn ($h) => ['id' => (string) $h->id, 'label' => $h->name])->values()"
+                                    :selected="old('hospital_id', session('active_hospital_id'))"
+                                    :error="$errors->has('hospital_id')" />
                             @else
                                 <input type="hidden" name="hospital_id" value="{{ $userHospitals->first()->id }}" />
                                 <input type="text" value="{{ $userHospitals->first()->name }}" disabled
@@ -89,19 +103,9 @@
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                 Sterilizer <span class="text-red-500">*</span>
                             </label>
-                            <select name="sterilizer_id"
-                                class="w-full rounded-lg border bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
-                                           focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20
-                                           {{ $errors->has('sterilizer_id') ? 'border-red-400' : 'border-gray-200' }}">
-                                <option value="">Pilih Sterilizer</option>
-                                @foreach ($sterilizers as $sterilizer)
-                                    <option value="{{ $sterilizer->id }}"
-                                        {{ old('sterilizer_id') == $sterilizer->id ? 'selected' : '' }}>
-                                        {{ $sterilizer->name }} ({{ $sterilizer->type }}) — Kapasitas
-                                        {{ $sterilizer->capacity ?? '?' }} tray
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select name="sterilizer_id" placeholder="Pilih Sterilizer"
+                                :options="$sterilizers->map(fn ($s) => ['id' => (string) $s->id, 'label' => $s->name . ' (' . $s->type . ') — Kapasitas ' . ($s->capacity ?? '?') . ' tray'])->values()"
+                                :selected="old('sterilizer_id')" :error="$errors->has('sterilizer_id')" />
                             @error('sterilizer_id')
                                 <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror
@@ -153,6 +157,21 @@
 
                         <div class="sm:col-span-2">
                             <label
+                                class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                                Uji Bowie-Dick <span class="font-normal normal-case text-gray-400">(uji harian mesin pra-vakum)</span>
+                            </label>
+                            <select name="bowie_dick_result"
+                                class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
+                                          focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20">
+                                <option value="">— Tidak dicatat —</option>
+                                @foreach (\App\Models\SterilizationBatch::BOWIE_DICK as $key => $info)
+                                    <option value="{{ $key }}" @selected(old('bowie_dick_result') === $key)>{{ $info['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">Catatan</label>
                             <textarea name="notes" rows="2"
                                 class="w-full resize-none rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
@@ -176,6 +195,20 @@
                         <span class="ml-auto text-xs text-gray-400">Hanya tray berstatus <span
                                 class="font-semibold text-amber-600">Siap Sterilisasi</span></span>
                     </div>
+
+                    {{-- Scan kode/barcode tray — pola scanner: HID mengetik lalu Enter. --}}
+                    <div class="border-b border-gray-50 bg-amber-50/40 px-5 py-3">
+                        <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                            Scan Tray
+                        </label>
+                        <input type="text" x-model="scanCode" x-ref="scanInput" autofocus
+                            @keydown.enter.prevent="scanTray(); $refs.scanInput.focus()"
+                            placeholder="Scan kode/barcode tray lalu Enter..."
+                            class="w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 transition
+                                   focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20" />
+                        <p x-show="scanMessage" x-text="scanMessage" x-cloak class="mt-1.5 text-xs text-gray-500"></p>
+                    </div>
+
                     <div class="p-5">
                         @error('tray_ids')
                             <p class="mb-3 text-xs text-red-500">{{ $message }}</p>
@@ -186,10 +219,7 @@
                                 class="mb-2 flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 transition hover:border-primary-200 hover:bg-primary-50"
                                 :class="selectedTrays.includes('{{ $tray->id }}') ? 'border-primary-300 bg-primary-50' : ''">
                                 <input type="checkbox" name="tray_ids[]" value="{{ $tray->id }}"
-                                    @change="selectedTrays.includes('{{ $tray->id }}')
-                                           ? selectedTrays.splice(selectedTrays.indexOf('{{ $tray->id }}'), 1)
-                                           : selectedTrays.push('{{ $tray->id }}')"
-                                    {{ in_array($tray->id, old('tray_ids', [])) ? 'checked' : '' }}
+                                    x-model="selectedTrays"
                                     class="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-400" />
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2">
@@ -253,16 +283,11 @@
 
                         <template x-for="(usage, index) in usages" :key="index">
                             <div class="mb-2 flex items-start gap-3">
-                                <select :name="'consumable_usages[' + index + '][consumable_id]'"
-                                    x-model="usage.consumable_id"
-                                    class="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 transition
-                                           focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                                    <option value="">Pilih consumable...</option>
-                                    @foreach ($consumables as $c)
-                                        <option value="{{ $c->id }}">{{ $c->name }}
-                                            ({{ $c->current_stock }} {{ $c->unit }} tersedia)</option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select class="flex-1" dynamicName="'consumable_usages[' + index + '][consumable_id]'"
+                                    model="usage.consumable_id"
+                                    :options="$consumables->map(fn ($c) => ['id' => (string) $c->id, 'label' => $c->name . ' (' . $c->current_stock . ' ' . $c->unit . ' tersedia)'])->values()"
+                                    placeholder="Pilih consumable..." searchPlaceholder="Cari consumable..."
+                                    emptyText="Consumable tidak ditemukan" />
                                 <input type="number" :name="'consumable_usages[' + index + '][quantity]'"
                                     x-model="usage.quantity" min="1"
                                     class="w-28 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-center text-sm text-gray-900 transition

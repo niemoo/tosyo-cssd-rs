@@ -39,12 +39,9 @@
                     class="w-full border-none bg-transparent p-0 text-sm text-gray-600 placeholder-gray-300 focus:ring-0 focus:outline-none" />
             </div>
 
-            <select name="status"
-                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                <option value="">Semua Status</option>
-                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
-                <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Non-aktif</option>
-            </select>
+            <x-searchable-select name="status" placeholder="Semua Status"
+                :options="[['id' => 'active', 'label' => 'Aktif'], ['id' => 'inactive', 'label' => 'Non-aktif']]"
+                :selected="request('status')" />
 
             <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-500">
                 <input type="checkbox" name="show_deleted" value="1" {{ request('show_deleted') ? 'checked' : '' }}

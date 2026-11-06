@@ -3,14 +3,15 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
             // Dashboard
@@ -76,20 +77,24 @@ class PermissionSeeder extends Seeder
 
             // Distribution Requests
             'distribution-requests.view', 'distribution-requests.create',
-            'distribution-requests.approve', 'distribution-requests.fulfill',
-            'distribution-requests.return', 'distribution-requests.delete',
+            'distribution-requests.edit', 'distribution-requests.approve',
+            'distribution-requests.fulfill', 'distribution-requests.return',
+            'distribution-requests.delete',
 
             // Trays
             'trays.view', 'trays.create', 'trays.edit',
 
             // Sterilization Batches
             'sterilization-batches.view', 'sterilization-batches.create',
-            'sterilization-batches.edit',
+            'sterilization-batches.edit', 'sterilization-batches.delete',
+
+            // Reports
+            'reports.view',
         ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([
-                'name'       => $permission,
+                'name' => $permission,
                 'guard_name' => 'web',
             ]);
         }
@@ -100,7 +105,9 @@ class PermissionSeeder extends Seeder
             $admin->syncPermissions(Permission::all());
         }
 
-        // Kepala CSSD
+        // Kepala CSSD — pengawasan & laporan, benar-benar read-only + menyetujui
+        // permintaan. TANPA .create/.edit/.delete apa pun.
+        // NOTE(rbac): pemetaan default, perlu divalidasi bersama user/stakeholder.
         $kepala = Role::where('name', 'Kepala CSSD')->first();
         if ($kepala) {
             $kepala->syncPermissions([
@@ -111,10 +118,14 @@ class PermissionSeeder extends Seeder
                 'sterilizers.view', 'storage-racks.view',
                 'consumables.view', 'consumable-stocks.view',
                 'consumable-movements.view',
+                'sterilization-batches.view',
+                'distribution-requests.view', 'distribution-requests.approve',
+                'reports.view',
             ]);
         }
 
-        // Supervisor CSSD
+        // Supervisor CSSD — perakitan, template, & alur distribusi.
+        // NOTE(rbac): pemetaan default, perlu divalidasi bersama user/stakeholder.
         $supervisor = Role::where('name', 'Supervisor CSSD')->first();
         if ($supervisor) {
             $supervisor->syncPermissions([
@@ -127,32 +138,43 @@ class PermissionSeeder extends Seeder
                 'storage-racks.view',
                 'consumables.view', 'consumable-stocks.view',
                 'consumable-movements.view', 'consumable-movements.create',
+                'sterilization-batches.view',
+                'distribution-requests.view', 'distribution-requests.create',
+                'distribution-requests.edit', 'distribution-requests.approve',
+                'distribution-requests.fulfill', 'distribution-requests.return',
+                'reports.view',
             ]);
         }
 
-        // Operator CSSD
+        // Operator CSSD — menjalankan mesin & merilis sterilitas.
+        // NOTE(rbac): pemetaan default, perlu divalidasi bersama user/stakeholder.
         $operator = Role::where('name', 'Operator CSSD')->first();
         if ($operator) {
             $operator->syncPermissions([
                 'dashboard.view',
                 'instruments.view', 'instrument-items.view',
                 'tray-templates.view',
-                'trays.view',
+                'trays.view', 'trays.edit',
                 'sterilizers.view',
                 'storage-racks.view',
                 'consumables.view', 'consumable-stocks.view',
                 'consumable-movements.view', 'consumable-movements.create',
+                'sterilization-batches.view', 'sterilization-batches.create',
+                'sterilization-batches.edit',
+                'distribution-requests.view', 'distribution-requests.fulfill',
+                'distribution-requests.return',
             ]);
         }
 
-        // Teknisi
+        // Teknisi — perawatan mesin & instrumen.
+        // NOTE(rbac): pemetaan default, perlu divalidasi bersama user/stakeholder.
         $teknisi = Role::where('name', 'Teknisi')->first();
         if ($teknisi) {
             $teknisi->syncPermissions([
                 'dashboard.view',
                 'instruments.view', 'instrument-items.view',
                 'instrument-items.edit',
-                'sterilizers.view',
+                'sterilizers.view', 'sterilizers.edit',
             ]);
         }
     }

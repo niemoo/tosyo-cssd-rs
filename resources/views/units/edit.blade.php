@@ -84,17 +84,9 @@
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                 Tipe Unit
                             </label>
-                            <select name="type"
-                                class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
-                                           focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                                <option value="">Pilih Tipe</option>
-                                @foreach ($types as $type)
-                                    <option value="{{ $type }}"
-                                        {{ old('type', $unit->type) === $type ? 'selected' : '' }}>
-                                        {{ $type }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select name="type" placeholder="Pilih Tipe"
+                                :options="collect($types)->map(fn ($t) => ['id' => $t, 'label' => $t])->values()"
+                                :selected="old('type', $unit->type)" />
                         </div>
 
                         <div class="sm:col-span-2">

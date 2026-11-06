@@ -11,6 +11,13 @@ class InstrumentItem extends Model
 {
     use SoftDeletes, HasAuditColumns, HasQrCode;
 
+    const CONDITIONS = [
+        'GOOD'         => ['label' => 'Baik',             'color' => 'green'],
+        'DAMAGED'      => ['label' => 'Rusak',            'color' => 'red'],
+        'UNDER_REPAIR' => ['label' => 'Sedang Perbaikan', 'color' => 'amber'],
+        'RETIRED'      => ['label' => 'Pensiun',          'color' => 'gray'],
+    ];
+
     protected $fillable = [
         'hospital_id',
         'instrument_id',

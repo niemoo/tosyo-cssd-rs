@@ -1,26 +1,29 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ConsumableCategoryController;
 use App\Http\Controllers\ConsumableController;
 use App\Http\Controllers\ConsumableStockController;
 use App\Http\Controllers\ConsumableUsageController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DistributionRequestController;
 use App\Http\Controllers\HospitalController;
 use App\Http\Controllers\InstrumentCategoryController;
 use App\Http\Controllers\InstrumentController;
 use App\Http\Controllers\InstrumentItemController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SterilizationBatchController;
 use App\Http\Controllers\SterilizeController;
 use App\Http\Controllers\StorageRackController;
+use App\Http\Controllers\TraceabilityController;
 use App\Http\Controllers\TrayController;
 use App\Http\Controllers\TrayReturnController;
 use App\Http\Controllers\TrayTemplateController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
+use App\Models\Hospital;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\DashboardController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -30,20 +33,21 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-    Route::get('/switch-hospital/{hospital}', function (\App\Models\Hospital $hospital) {
+    Route::get('/switch-hospital/{hospital}', function (Hospital $hospital) {
         $isMember = auth()->user()->hospitals()
-                          ->where('hospitals.id', $hospital->id)
-                          ->where('hospital_users.is_active', true)
-                          ->exists();
+            ->where('hospitals.id', $hospital->id)
+            ->where('hospital_users.is_active', true)
+            ->exists();
         if ($isMember) {
             session(['active_hospital_id' => $hospital->id]);
         }
+
         return redirect()->back();
     })->name('switch-hospital');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])
-         ->middleware('permission:dashboard.view')
-         ->name('dashboard');
+        ->middleware('permission:dashboard.view')
+        ->name('dashboard');
 
     Route::middleware(['permission:hospitals.view'])->group(function () {
 
@@ -51,27 +55,34 @@ Route::middleware('auth')->group(function () {
             ->name('hospitals.index');
 
         Route::get('hospitals/create', [HospitalController::class, 'create'])
-            ->name('hospitals.create');
+            ->name('hospitals.create')
+            ->middleware('permission:hospitals.create');
 
         Route::post('hospitals', [HospitalController::class, 'store'])
-            ->name('hospitals.store');
+            ->name('hospitals.store')
+            ->middleware('permission:hospitals.create');
 
         // Sub-routes dengan segment tambahan HARUS di atas {hospital}
         Route::get('hospitals/{hospital}/edit', [HospitalController::class, 'edit'])
-            ->name('hospitals.edit');
+            ->name('hospitals.edit')
+            ->middleware('permission:hospitals.edit');
 
         Route::patch('hospitals/{hospital}/toggle-active', [HospitalController::class, 'toggleActive'])
-            ->name('hospitals.toggle-active');
+            ->name('hospitals.toggle-active')
+            ->middleware('permission:hospitals.edit');
 
         Route::patch('hospitals/{id}/restore', [HospitalController::class, 'restore'])
-            ->name('hospitals.restore');
+            ->name('hospitals.restore')
+            ->middleware('permission:hospitals.delete');
 
         // PUT/DELETE {hospital} — tidak konflik karena beda method
         Route::put('hospitals/{hospital}', [HospitalController::class, 'update'])
-            ->name('hospitals.update');
+            ->name('hospitals.update')
+            ->middleware('permission:hospitals.edit');
 
         Route::delete('hospitals/{hospital}', [HospitalController::class, 'destroy'])
-            ->name('hospitals.destroy');
+            ->name('hospitals.destroy')
+            ->middleware('permission:hospitals.delete');
 
         // Show PALING BAWAH
         Route::get('hospitals/{hospital}', [HospitalController::class, 'show'])
@@ -82,41 +93,53 @@ Route::middleware('auth')->group(function () {
     // Users
     Route::middleware(['permission:users.view'])->group(function () {
         Route::get('users', [UserController::class, 'index'])
-             ->name('users.index');
+            ->name('users.index');
         Route::get('users/create', [UserController::class, 'create'])
-             ->name('users.create');
+            ->name('users.create')
+            ->middleware('permission:users.create');
         Route::post('users', [UserController::class, 'store'])
-             ->name('users.store');
+            ->name('users.store')
+            ->middleware('permission:users.create');
         Route::get('users/{user}/edit', [UserController::class, 'edit'])
-             ->name('users.edit');
+            ->name('users.edit')
+            ->middleware('permission:users.edit');
         Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive'])
-             ->name('users.toggle-active');
+            ->name('users.toggle-active')
+            ->middleware('permission:users.edit');
         Route::patch('users/{id}/restore', [UserController::class, 'restore'])
-             ->name('users.restore');
+            ->name('users.restore')
+            ->middleware('permission:users.delete');
         Route::put('users/{user}', [UserController::class, 'update'])
-             ->name('users.update');
+            ->name('users.update')
+            ->middleware('permission:users.edit');
         Route::delete('users/{user}', [UserController::class, 'destroy'])
-             ->name('users.destroy');
+            ->name('users.destroy')
+            ->middleware('permission:users.delete');
         Route::get('users/{user}', [UserController::class, 'show'])
-             ->name('users.show');
+            ->name('users.show');
     });
 
     // Roles
     Route::middleware(['permission:roles.view'])->group(function () {
         Route::get('roles', [RoleController::class, 'index'])
-             ->name('roles.index');
+            ->name('roles.index');
         Route::get('roles/create', [RoleController::class, 'create'])
-             ->name('roles.create');
+            ->name('roles.create')
+            ->middleware('permission:roles.create');
         Route::post('roles', [RoleController::class, 'store'])
-             ->name('roles.store');
+            ->name('roles.store')
+            ->middleware('permission:roles.create');
         Route::get('roles/{role}/edit', [RoleController::class, 'edit'])
-             ->name('roles.edit');
+            ->name('roles.edit')
+            ->middleware('permission:roles.edit');
         Route::put('roles/{role}', [RoleController::class, 'update'])
-             ->name('roles.update');
+            ->name('roles.update')
+            ->middleware('permission:roles.edit');
         Route::delete('roles/{role}', [RoleController::class, 'destroy'])
-             ->name('roles.destroy');
+            ->name('roles.destroy')
+            ->middleware('permission:roles.delete');
         Route::get('roles/{role}', [RoleController::class, 'show'])
-             ->name('roles.show');
+            ->name('roles.show');
     });
 
     // Units
@@ -124,19 +147,26 @@ Route::middleware('auth')->group(function () {
         Route::get('units', [UnitController::class, 'index'])
             ->name('units.index');
         Route::get('units/create', [UnitController::class, 'create'])
-            ->name('units.create');
+            ->name('units.create')
+            ->middleware('permission:units.create');
         Route::post('units', [UnitController::class, 'store'])
-            ->name('units.store');
+            ->name('units.store')
+            ->middleware('permission:units.create');
         Route::get('units/{unit}/edit', [UnitController::class, 'edit'])
-            ->name('units.edit');
+            ->name('units.edit')
+            ->middleware('permission:units.edit');
         Route::patch('units/{unit}/toggle-active', [UnitController::class, 'toggleActive'])
-            ->name('units.toggle-active');
+            ->name('units.toggle-active')
+            ->middleware('permission:units.edit');
         Route::patch('units/{id}/restore', [UnitController::class, 'restore'])
-            ->name('units.restore');
+            ->name('units.restore')
+            ->middleware('permission:units.delete');
         Route::put('units/{unit}', [UnitController::class, 'update'])
-            ->name('units.update');
+            ->name('units.update')
+            ->middleware('permission:units.edit');
         Route::delete('units/{unit}', [UnitController::class, 'destroy'])
-            ->name('units.destroy');
+            ->name('units.destroy')
+            ->middleware('permission:units.delete');
         Route::get('units/{unit}', [UnitController::class, 'show'])
             ->name('units.show');
     });
@@ -146,19 +176,26 @@ Route::middleware('auth')->group(function () {
         Route::get('instrument-categories', [InstrumentCategoryController::class, 'index'])
             ->name('instrument-categories.index');
         Route::get('instrument-categories/create', [InstrumentCategoryController::class, 'create'])
-            ->name('instrument-categories.create');
+            ->name('instrument-categories.create')
+            ->middleware('permission:instrument-categories.create');
         Route::post('instrument-categories', [InstrumentCategoryController::class, 'store'])
-            ->name('instrument-categories.store');
+            ->name('instrument-categories.store')
+            ->middleware('permission:instrument-categories.create');
         Route::get('instrument-categories/{instrumentCategory}/edit', [InstrumentCategoryController::class, 'edit'])
-            ->name('instrument-categories.edit');
+            ->name('instrument-categories.edit')
+            ->middleware('permission:instrument-categories.edit');
         Route::patch('instrument-categories/{instrumentCategory}/toggle-active', [InstrumentCategoryController::class, 'toggleActive'])
-            ->name('instrument-categories.toggle-active');
+            ->name('instrument-categories.toggle-active')
+            ->middleware('permission:instrument-categories.edit');
         Route::patch('instrument-categories/{id}/restore', [InstrumentCategoryController::class, 'restore'])
-            ->name('instrument-categories.restore');
+            ->name('instrument-categories.restore')
+            ->middleware('permission:instrument-categories.delete');
         Route::put('instrument-categories/{instrumentCategory}', [InstrumentCategoryController::class, 'update'])
-            ->name('instrument-categories.update');
+            ->name('instrument-categories.update')
+            ->middleware('permission:instrument-categories.edit');
         Route::delete('instrument-categories/{instrumentCategory}', [InstrumentCategoryController::class, 'destroy'])
-            ->name('instrument-categories.destroy');
+            ->name('instrument-categories.destroy')
+            ->middleware('permission:instrument-categories.delete');
         Route::get('instrument-categories/{instrumentCategory}', [InstrumentCategoryController::class, 'show'])
             ->name('instrument-categories.show');
     });
@@ -168,19 +205,26 @@ Route::middleware('auth')->group(function () {
         Route::get('instruments', [InstrumentController::class, 'index'])
             ->name('instruments.index');
         Route::get('instruments/create', [InstrumentController::class, 'create'])
-            ->name('instruments.create');
+            ->name('instruments.create')
+            ->middleware('permission:instruments.create');
         Route::post('instruments', [InstrumentController::class, 'store'])
-            ->name('instruments.store');
+            ->name('instruments.store')
+            ->middleware('permission:instruments.create');
         Route::get('instruments/{instrument}/edit', [InstrumentController::class, 'edit'])
-            ->name('instruments.edit');
+            ->name('instruments.edit')
+            ->middleware('permission:instruments.edit');
         Route::patch('instruments/{instrument}/toggle-active', [InstrumentController::class, 'toggleActive'])
-            ->name('instruments.toggle-active');
+            ->name('instruments.toggle-active')
+            ->middleware('permission:instruments.edit');
         Route::patch('instruments/{id}/restore', [InstrumentController::class, 'restore'])
-            ->name('instruments.restore');
+            ->name('instruments.restore')
+            ->middleware('permission:instruments.delete');
         Route::put('instruments/{instrument}', [InstrumentController::class, 'update'])
-            ->name('instruments.update');
+            ->name('instruments.update')
+            ->middleware('permission:instruments.edit');
         Route::delete('instruments/{instrument}', [InstrumentController::class, 'destroy'])
-            ->name('instruments.destroy');
+            ->name('instruments.destroy')
+            ->middleware('permission:instruments.delete');
         Route::get('instruments/{instrument}', [InstrumentController::class, 'show'])
             ->name('instruments.show');
     });
@@ -190,19 +234,26 @@ Route::middleware('auth')->group(function () {
         Route::get('instrument-items', [InstrumentItemController::class, 'index'])
             ->name('instrument-items.index');
         Route::get('instrument-items/create', [InstrumentItemController::class, 'create'])
-            ->name('instrument-items.create');
+            ->name('instrument-items.create')
+            ->middleware('permission:instrument-items.create');
         Route::post('instrument-items', [InstrumentItemController::class, 'store'])
-            ->name('instrument-items.store');
+            ->name('instrument-items.store')
+            ->middleware('permission:instrument-items.create');
         Route::get('instrument-items/{instrumentItem}/edit', [InstrumentItemController::class, 'edit'])
-            ->name('instrument-items.edit');
+            ->name('instrument-items.edit')
+            ->middleware('permission:instrument-items.edit');
         Route::patch('instrument-items/{instrumentItem}/toggle-active', [InstrumentItemController::class, 'toggleActive'])
-            ->name('instrument-items.toggle-active');
+            ->name('instrument-items.toggle-active')
+            ->middleware('permission:instrument-items.edit');
         Route::patch('instrument-items/{id}/restore', [InstrumentItemController::class, 'restore'])
-            ->name('instrument-items.restore');
+            ->name('instrument-items.restore')
+            ->middleware('permission:instrument-items.delete');
         Route::put('instrument-items/{instrumentItem}', [InstrumentItemController::class, 'update'])
-            ->name('instrument-items.update');
+            ->name('instrument-items.update')
+            ->middleware('permission:instrument-items.edit');
         Route::delete('instrument-items/{instrumentItem}', [InstrumentItemController::class, 'destroy'])
-            ->name('instrument-items.destroy');
+            ->name('instrument-items.destroy')
+            ->middleware('permission:instrument-items.delete');
         Route::get('instrument-items/{instrumentItem}', [InstrumentItemController::class, 'show'])
             ->name('instrument-items.show');
     });
@@ -212,19 +263,26 @@ Route::middleware('auth')->group(function () {
         Route::get('tray-templates', [TrayTemplateController::class, 'index'])
             ->name('tray-templates.index');
         Route::get('tray-templates/create', [TrayTemplateController::class, 'create'])
-            ->name('tray-templates.create');
+            ->name('tray-templates.create')
+            ->middleware('permission:tray-templates.create');
         Route::post('tray-templates', [TrayTemplateController::class, 'store'])
-            ->name('tray-templates.store');
+            ->name('tray-templates.store')
+            ->middleware('permission:tray-templates.create');
         Route::get('tray-templates/{trayTemplate}/edit', [TrayTemplateController::class, 'edit'])
-            ->name('tray-templates.edit');
+            ->name('tray-templates.edit')
+            ->middleware('permission:tray-templates.edit');
         Route::patch('tray-templates/{trayTemplate}/toggle-active', [TrayTemplateController::class, 'toggleActive'])
-            ->name('tray-templates.toggle-active');
+            ->name('tray-templates.toggle-active')
+            ->middleware('permission:tray-templates.edit');
         Route::patch('tray-templates/{id}/restore', [TrayTemplateController::class, 'restore'])
-            ->name('tray-templates.restore');
+            ->name('tray-templates.restore')
+            ->middleware('permission:tray-templates.delete');
         Route::put('tray-templates/{trayTemplate}', [TrayTemplateController::class, 'update'])
-            ->name('tray-templates.update');
+            ->name('tray-templates.update')
+            ->middleware('permission:tray-templates.edit');
         Route::delete('tray-templates/{trayTemplate}', [TrayTemplateController::class, 'destroy'])
-            ->name('tray-templates.destroy');
+            ->name('tray-templates.destroy')
+            ->middleware('permission:tray-templates.delete');
         Route::get('tray-templates/{trayTemplate}', [TrayTemplateController::class, 'show'])
             ->name('tray-templates.show');
     });
@@ -234,19 +292,26 @@ Route::middleware('auth')->group(function () {
         Route::get('sterilizers', [SterilizeController::class, 'index'])
             ->name('sterilizers.index');
         Route::get('sterilizers/create', [SterilizeController::class, 'create'])
-            ->name('sterilizers.create');
+            ->name('sterilizers.create')
+            ->middleware('permission:sterilizers.create');
         Route::post('sterilizers', [SterilizeController::class, 'store'])
-            ->name('sterilizers.store');
+            ->name('sterilizers.store')
+            ->middleware('permission:sterilizers.create');
         Route::get('sterilizers/{sterilizer}/edit', [SterilizeController::class, 'edit'])
-            ->name('sterilizers.edit');
+            ->name('sterilizers.edit')
+            ->middleware('permission:sterilizers.edit');
         Route::patch('sterilizers/{sterilizer}/toggle-active', [SterilizeController::class, 'toggleActive'])
-            ->name('sterilizers.toggle-active');
+            ->name('sterilizers.toggle-active')
+            ->middleware('permission:sterilizers.edit');
         Route::patch('sterilizers/{id}/restore', [SterilizeController::class, 'restore'])
-            ->name('sterilizers.restore');
+            ->name('sterilizers.restore')
+            ->middleware('permission:sterilizers.delete');
         Route::put('sterilizers/{sterilizer}', [SterilizeController::class, 'update'])
-            ->name('sterilizers.update');
+            ->name('sterilizers.update')
+            ->middleware('permission:sterilizers.edit');
         Route::delete('sterilizers/{sterilizer}', [SterilizeController::class, 'destroy'])
-            ->name('sterilizers.destroy');
+            ->name('sterilizers.destroy')
+            ->middleware('permission:sterilizers.delete');
         Route::get('sterilizers/{sterilizer}', [SterilizeController::class, 'show'])
             ->name('sterilizers.show');
     });
@@ -256,19 +321,26 @@ Route::middleware('auth')->group(function () {
         Route::get('storage-racks', [StorageRackController::class, 'index'])
             ->name('storage-racks.index');
         Route::get('storage-racks/create', [StorageRackController::class, 'create'])
-            ->name('storage-racks.create');
+            ->name('storage-racks.create')
+            ->middleware('permission:storage-racks.create');
         Route::post('storage-racks', [StorageRackController::class, 'store'])
-            ->name('storage-racks.store');
+            ->name('storage-racks.store')
+            ->middleware('permission:storage-racks.create');
         Route::get('storage-racks/{storageRack}/edit', [StorageRackController::class, 'edit'])
-            ->name('storage-racks.edit');
+            ->name('storage-racks.edit')
+            ->middleware('permission:storage-racks.edit');
         Route::patch('storage-racks/{storageRack}/toggle-active', [StorageRackController::class, 'toggleActive'])
-            ->name('storage-racks.toggle-active');
+            ->name('storage-racks.toggle-active')
+            ->middleware('permission:storage-racks.edit');
         Route::patch('storage-racks/{id}/restore', [StorageRackController::class, 'restore'])
-            ->name('storage-racks.restore');
+            ->name('storage-racks.restore')
+            ->middleware('permission:storage-racks.delete');
         Route::put('storage-racks/{storageRack}', [StorageRackController::class, 'update'])
-            ->name('storage-racks.update');
+            ->name('storage-racks.update')
+            ->middleware('permission:storage-racks.edit');
         Route::delete('storage-racks/{storageRack}', [StorageRackController::class, 'destroy'])
-            ->name('storage-racks.destroy');
+            ->name('storage-racks.destroy')
+            ->middleware('permission:storage-racks.delete');
         Route::get('storage-racks/{storageRack}', [StorageRackController::class, 'show'])
             ->name('storage-racks.show');
     });
@@ -278,19 +350,26 @@ Route::middleware('auth')->group(function () {
         Route::get('consumable-categories', [ConsumableCategoryController::class, 'index'])
             ->name('consumable-categories.index');
         Route::get('consumable-categories/create', [ConsumableCategoryController::class, 'create'])
-            ->name('consumable-categories.create');
+            ->name('consumable-categories.create')
+            ->middleware('permission:consumable-categories.create');
         Route::post('consumable-categories', [ConsumableCategoryController::class, 'store'])
-            ->name('consumable-categories.store');
+            ->name('consumable-categories.store')
+            ->middleware('permission:consumable-categories.create');
         Route::get('consumable-categories/{consumableCategory}/edit', [ConsumableCategoryController::class, 'edit'])
-            ->name('consumable-categories.edit');
+            ->name('consumable-categories.edit')
+            ->middleware('permission:consumable-categories.edit');
         Route::patch('consumable-categories/{consumableCategory}/toggle-active', [ConsumableCategoryController::class, 'toggleActive'])
-            ->name('consumable-categories.toggle-active');
+            ->name('consumable-categories.toggle-active')
+            ->middleware('permission:consumable-categories.edit');
         Route::patch('consumable-categories/{id}/restore', [ConsumableCategoryController::class, 'restore'])
-            ->name('consumable-categories.restore');
+            ->name('consumable-categories.restore')
+            ->middleware('permission:consumable-categories.delete');
         Route::put('consumable-categories/{consumableCategory}', [ConsumableCategoryController::class, 'update'])
-            ->name('consumable-categories.update');
+            ->name('consumable-categories.update')
+            ->middleware('permission:consumable-categories.edit');
         Route::delete('consumable-categories/{consumableCategory}', [ConsumableCategoryController::class, 'destroy'])
-            ->name('consumable-categories.destroy');
+            ->name('consumable-categories.destroy')
+            ->middleware('permission:consumable-categories.delete');
         Route::get('consumable-categories/{consumableCategory}', [ConsumableCategoryController::class, 'show'])
             ->name('consumable-categories.show');
     });
@@ -300,19 +379,26 @@ Route::middleware('auth')->group(function () {
         Route::get('consumables', [ConsumableController::class, 'index'])
             ->name('consumables.index');
         Route::get('consumables/create', [ConsumableController::class, 'create'])
-            ->name('consumables.create');
+            ->name('consumables.create')
+            ->middleware('permission:consumables.create');
         Route::post('consumables', [ConsumableController::class, 'store'])
-            ->name('consumables.store');
+            ->name('consumables.store')
+            ->middleware('permission:consumables.create');
         Route::get('consumables/{consumable}/edit', [ConsumableController::class, 'edit'])
-            ->name('consumables.edit');
+            ->name('consumables.edit')
+            ->middleware('permission:consumables.edit');
         Route::patch('consumables/{consumable}/toggle-active', [ConsumableController::class, 'toggleActive'])
-            ->name('consumables.toggle-active');
+            ->name('consumables.toggle-active')
+            ->middleware('permission:consumables.edit');
         Route::patch('consumables/{id}/restore', [ConsumableController::class, 'restore'])
-            ->name('consumables.restore');
+            ->name('consumables.restore')
+            ->middleware('permission:consumables.delete');
         Route::put('consumables/{consumable}', [ConsumableController::class, 'update'])
-            ->name('consumables.update');
+            ->name('consumables.update')
+            ->middleware('permission:consumables.edit');
         Route::delete('consumables/{consumable}', [ConsumableController::class, 'destroy'])
-            ->name('consumables.destroy');
+            ->name('consumables.destroy')
+            ->middleware('permission:consumables.delete');
         Route::get('consumables/{consumable}', [ConsumableController::class, 'show'])
             ->name('consumables.show');
     });
@@ -324,9 +410,11 @@ Route::middleware('auth')->group(function () {
         Route::get('consumable-stocks/movements', [ConsumableStockController::class, 'movements'])
             ->name('consumable-stocks.movements');
         Route::get('consumable-stocks/create', [ConsumableStockController::class, 'create'])
-            ->name('consumable-stocks.create');
+            ->name('consumable-stocks.create')
+            ->middleware('permission:consumable-movements.create');
         Route::post('consumable-stocks', [ConsumableStockController::class, 'store'])
-            ->name('consumable-stocks.store');
+            ->name('consumable-stocks.store')
+            ->middleware('permission:consumable-movements.create');
     });
 
     // Trays
@@ -334,19 +422,44 @@ Route::middleware('auth')->group(function () {
         Route::get('trays', [TrayController::class, 'index'])
             ->name('trays.index');
         Route::get('trays/create', [TrayController::class, 'create'])
-            ->name('trays.create');
+            ->name('trays.create')
+            ->middleware('permission:trays.create');
         Route::post('trays', [TrayController::class, 'store'])
-            ->name('trays.store');
+            ->name('trays.store')
+            ->middleware('permission:trays.create');
         Route::get('trays/{tray}/edit', [TrayController::class, 'edit'])
-            ->name('trays.edit');
+            ->name('trays.edit')
+            ->middleware('permission:trays.edit');
+        Route::patch('trays/{tray}/ready', [TrayController::class, 'markReady'])
+            ->name('trays.ready')
+            ->middleware('permission:trays.edit');
+        Route::patch('trays/{tray}/reprocess', [TrayController::class, 'reprocess'])
+            ->name('trays.reprocess')
+            ->middleware('permission:trays.edit');
+        Route::patch('trays/{tray}/unpack', [TrayController::class, 'unpack'])
+            ->name('trays.unpack')
+            ->middleware('permission:trays.edit');
         Route::patch('trays/{id}/restore', [TrayController::class, 'restore'])
-            ->name('trays.restore');
+            ->name('trays.restore')
+            ->middleware('permission:trays.delete');
         Route::put('trays/{tray}', [TrayController::class, 'update'])
-            ->name('trays.update');
+            ->name('trays.update')
+            ->middleware('permission:trays.edit');
         Route::delete('trays/{tray}', [TrayController::class, 'destroy'])
-            ->name('trays.destroy');
+            ->name('trays.destroy')
+            ->middleware('permission:trays.delete');
+        Route::get('trays/{tray}/label', [TrayController::class, 'label'])
+            ->name('trays.label');
         Route::get('trays/{tray}', [TrayController::class, 'show'])
             ->name('trays.show');
+    });
+
+    // Recall per Load (Fase 1 — read-only)
+    Route::middleware(['permission:trays.view'])->group(function () {
+        Route::get('traceability/recall', [TraceabilityController::class, 'loadRecall'])
+            ->name('traceability.load-recall');
+        Route::get('traceability/recall/print', [TraceabilityController::class, 'loadRecallPrint'])
+            ->name('traceability.load-recall.print');
     });
 
     // Sterilization Batches
@@ -354,19 +467,30 @@ Route::middleware('auth')->group(function () {
         Route::get('sterilization-batches', [SterilizationBatchController::class, 'index'])
             ->name('sterilization-batches.index');
         Route::get('sterilization-batches/create', [SterilizationBatchController::class, 'create'])
-            ->name('sterilization-batches.create');
+            ->name('sterilization-batches.create')
+            ->middleware('permission:sterilization-batches.create');
         Route::post('sterilization-batches', [SterilizationBatchController::class, 'store'])
-            ->name('sterilization-batches.store');
+            ->name('sterilization-batches.store')
+            ->middleware('permission:sterilization-batches.create');
         Route::get('sterilization-batches/{sterilizationBatch}/edit', [SterilizationBatchController::class, 'edit'])
-            ->name('sterilization-batches.edit');
+            ->name('sterilization-batches.edit')
+            ->middleware('permission:sterilization-batches.edit');
         Route::patch('sterilization-batches/{sterilizationBatch}/result', [SterilizationBatchController::class, 'updateResult'])
-            ->name('sterilization-batches.result');
+            ->name('sterilization-batches.result')
+            ->middleware('permission:sterilization-batches.edit');
+        // Restore & destroy memakai .delete — samakan dengan gate @can() di
+        // resources/views/sterilization-batches/index.blade.php.
         Route::patch('sterilization-batches/{id}/restore', [SterilizationBatchController::class, 'restore'])
-            ->name('sterilization-batches.restore');
+            ->name('sterilization-batches.restore')
+            ->middleware('permission:sterilization-batches.delete');
         Route::put('sterilization-batches/{sterilizationBatch}', [SterilizationBatchController::class, 'update'])
-            ->name('sterilization-batches.update');
+            ->name('sterilization-batches.update')
+            ->middleware('permission:sterilization-batches.edit');
         Route::delete('sterilization-batches/{sterilizationBatch}', [SterilizationBatchController::class, 'destroy'])
-            ->name('sterilization-batches.destroy');
+            ->name('sterilization-batches.destroy')
+            ->middleware('permission:sterilization-batches.delete');
+        Route::get('sterilization-batches/{sterilizationBatch}/labels', [SterilizationBatchController::class, 'labels'])
+            ->name('sterilization-batches.labels');
         Route::get('sterilization-batches/{sterilizationBatch}', [SterilizationBatchController::class, 'show'])
             ->name('sterilization-batches.show');
     });
@@ -376,20 +500,28 @@ Route::middleware('auth')->group(function () {
         Route::get('distribution-requests', [DistributionRequestController::class, 'index'])
             ->name('distribution-requests.index');
         Route::get('distribution-requests/create', [DistributionRequestController::class, 'create'])
-            ->name('distribution-requests.create');
+            ->name('distribution-requests.create')
+            ->middleware('permission:distribution-requests.create');
         Route::post('distribution-requests', [DistributionRequestController::class, 'store'])
-            ->name('distribution-requests.store');
+            ->name('distribution-requests.store')
+            ->middleware('permission:distribution-requests.create');
         Route::get('distribution-requests/{distributionRequest}/edit', [DistributionRequestController::class, 'edit'])
-            ->name('distribution-requests.edit');
+            ->name('distribution-requests.edit')
+            ->middleware('permission:distribution-requests.edit');
         Route::patch('distribution-requests/{distributionRequest}/approve', [DistributionRequestController::class, 'approve'])
             ->name('distribution-requests.approve')
             ->middleware('permission:distribution-requests.approve');
+        // Restore memakai .delete — samakan dengan gate @can() di
+        // resources/views/distribution-requests/index.blade.php.
         Route::patch('distribution-requests/{id}/restore', [DistributionRequestController::class, 'restore'])
-            ->name('distribution-requests.restore');
+            ->name('distribution-requests.restore')
+            ->middleware('permission:distribution-requests.delete');
         Route::put('distribution-requests/{distributionRequest}', [DistributionRequestController::class, 'update'])
-            ->name('distribution-requests.update');
+            ->name('distribution-requests.update')
+            ->middleware('permission:distribution-requests.edit');
         Route::delete('distribution-requests/{distributionRequest}', [DistributionRequestController::class, 'destroy'])
-            ->name('distribution-requests.destroy');
+            ->name('distribution-requests.destroy')
+            ->middleware('permission:distribution-requests.delete');
         Route::get('distribution-requests/{distributionRequest}', [DistributionRequestController::class, 'show'])
             ->name('distribution-requests.show');
         Route::get('distribution-requests/{distributionRequest}/fulfill', [DistributionRequestController::class, 'fulfill'])
@@ -399,7 +531,7 @@ Route::middleware('auth')->group(function () {
             ->name('distribution-requests.process-fulfillment')
             ->middleware('permission:distribution-requests.fulfill');
         Route::get('tray-returns', [TrayReturnController::class, 'index'])
-         ->name('tray-returns.index');
+            ->name('tray-returns.index');
     });
 
     // Tray Returns
@@ -410,8 +542,36 @@ Route::middleware('auth')->group(function () {
             ->name('tray-returns.store');
     });
 
+    // Reports
+    Route::middleware(['permission:reports.view'])->group(function () {
+        Route::get('reports', [ReportController::class, 'index'])
+            ->name('reports.index');
+
+        Route::get('reports/sterilization-log', [ReportController::class, 'sterilizationLog'])
+            ->name('reports.sterilization-log');
+        Route::get('reports/sterilization-log/print', [ReportController::class, 'sterilizationLogPrint'])
+            ->name('reports.sterilization-log.print');
+        Route::get('reports/sterilization-log/csv', [ReportController::class, 'sterilizationLogCsv'])
+            ->name('reports.sterilization-log.csv');
+
+        Route::get('reports/productivity', [ReportController::class, 'productivity'])
+            ->name('reports.productivity');
+        Route::get('reports/productivity/print', [ReportController::class, 'productivityPrint'])
+            ->name('reports.productivity.print');
+        Route::get('reports/productivity/csv', [ReportController::class, 'productivityCsv'])
+            ->name('reports.productivity.csv');
+
+        Route::get('reports/instrument-lifespan', [ReportController::class, 'instrumentLifespan'])
+            ->name('reports.instrument-lifespan');
+        Route::get('reports/instrument-lifespan/print', [ReportController::class, 'instrumentLifespanPrint'])
+            ->name('reports.instrument-lifespan.print');
+        Route::get('reports/instrument-lifespan/csv', [ReportController::class, 'instrumentLifespanCsv'])
+            ->name('reports.instrument-lifespan.csv');
+    });
+
     Route::post('consumable-usages', [ConsumableUsageController::class, 'store'])
-     ->name('consumable-usages.store');
+        ->name('consumable-usages.store')
+        ->middleware('permission:consumable-movements.create');
 });
 
-Route::get('/', fn() => redirect()->route('dashboard'));
+Route::get('/', fn () => redirect()->route('dashboard'));

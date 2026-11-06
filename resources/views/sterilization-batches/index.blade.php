@@ -42,24 +42,14 @@
             </div>
 
             @if ($multiHospital)
-                <select name="hospital_id"
-                    class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                    <option value="">Semua RS</option>
-                    @foreach ($userHospitals as $h)
-                        <option value="{{ $h->id }}" {{ request('hospital_id') == $h->id ? 'selected' : '' }}>
-                            {{ $h->name }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select name="hospital_id" placeholder="Semua RS"
+                    :options="$userHospitals->map(fn ($h) => ['id' => (string) $h->id, 'label' => $h->name])->values()"
+                    :selected="request('hospital_id')" />
             @endif
 
-            <select name="status"
-                class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                <option value="">Semua Status</option>
-                @foreach (\App\Models\SterilizationBatch::STATUSES as $key => $val)
-                    <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>
-                        {{ $val['label'] }}</option>
-                @endforeach
-            </select>
+            <x-searchable-select name="status" placeholder="Semua Status"
+                :options="collect(\App\Models\SterilizationBatch::STATUSES)->map(fn ($val, $key) => ['id' => $key, 'label' => $val['label']])->values()"
+                :selected="request('status')" />
 
             <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-500">
                 <input type="checkbox" name="show_deleted" value="1" {{ request('show_deleted') ? 'checked' : '' }}

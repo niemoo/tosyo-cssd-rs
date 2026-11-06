@@ -3,28 +3,35 @@
 namespace App\Models;
 
 use App\Traits\HasAuditColumns;
+use App\Traits\HasQrCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Tray extends Model
 {
-    use SoftDeletes, HasAuditColumns;
+    use HasAuditColumns, HasQrCode, SoftDeletes;
 
-    const STATUS_ASSEMBLING         = 'ASSEMBLING';
-    const STATUS_READY              = 'READY';
-    const STATUS_IN_STERILIZATION   = 'IN_STERILIZATION';
-    const STATUS_STERILE            = 'STERILE';
-    const STATUS_IN_USE             = 'IN_USE';
-    const STATUS_RETURNED           = 'RETURNED';
+    const STATUS_ASSEMBLING = 'ASSEMBLING';
+
+    const STATUS_READY = 'READY';
+
+    const STATUS_IN_STERILIZATION = 'IN_STERILIZATION';
+
+    const STATUS_STERILE = 'STERILE';
+
+    const STATUS_IN_USE = 'IN_USE';
+
+    const STATUS_RETURNED = 'RETURNED';
+
     const STATUS_NEEDS_REPROCESSING = 'NEEDS_REPROCESSING';
 
     const STATUSES = [
-        self::STATUS_ASSEMBLING         => ['label' => 'Dirakit',           'color' => 'blue'],
-        self::STATUS_READY              => ['label' => 'Siap Sterilisasi',   'color' => 'amber'],
-        self::STATUS_IN_STERILIZATION   => ['label' => 'Dalam Sterilisasi',  'color' => 'purple'],
-        self::STATUS_STERILE            => ['label' => 'Steril',             'color' => 'green'],
-        self::STATUS_IN_USE             => ['label' => 'Sedang Digunakan',   'color' => 'teal'],
-        self::STATUS_RETURNED           => ['label' => 'Dikembalikan',       'color' => 'gray'],
+        self::STATUS_ASSEMBLING => ['label' => 'Dirakit',           'color' => 'blue'],
+        self::STATUS_READY => ['label' => 'Siap Sterilisasi',   'color' => 'amber'],
+        self::STATUS_IN_STERILIZATION => ['label' => 'Dalam Sterilisasi',  'color' => 'purple'],
+        self::STATUS_STERILE => ['label' => 'Steril',             'color' => 'green'],
+        self::STATUS_IN_USE => ['label' => 'Sedang Digunakan',   'color' => 'teal'],
+        self::STATUS_RETURNED => ['label' => 'Dikembalikan',       'color' => 'gray'],
         self::STATUS_NEEDS_REPROCESSING => ['label' => 'Perlu Diproses Ulang', 'color' => 'red'],
     ];
 
@@ -32,11 +39,15 @@ class Tray extends Model
         'hospital_id',
         'template_id',
         'code',
+        'barcode',
         'name',
         'status',
         'current_rack_id',
         'assembled_by',
         'assembled_at',
+        'sterile_at',
+        'expiry_at',
+        'current_load_number',
         'notes',
         'is_active',
         'created_by',
@@ -47,9 +58,11 @@ class Tray extends Model
     protected function casts(): array
     {
         return [
-            'is_active'   => 'boolean',
+            'is_active' => 'boolean',
             'assembled_at' => 'datetime',
-            'deleted_at'  => 'datetime',
+            'sterile_at' => 'datetime',
+            'expiry_at' => 'datetime',
+            'deleted_at' => 'datetime',
         ];
     }
 
@@ -94,6 +107,11 @@ class Tray extends Model
         return $this->hasMany(TrayReturn::class);
     }
 
+    public function lifecycleEvents()
+    {
+        return $this->hasMany(TrayLifecycleEvent::class)->latest('performed_at');
+    }
+
     // Helpers
     public function getStatusLabelAttribute(): string
     {
@@ -113,5 +131,38 @@ class Tray extends Model
     public function canBeSterilized(): bool
     {
         return $this->status === self::STATUS_READY;
+    }
+
+    public function canBeMarkedReady(): bool
+    {
+        return $this->status === self::STATUS_ASSEMBLING;
+    }
+
+    public function canBeReprocessed(): bool
+    {
+        return in_array($this->status, [self::STATUS_RETURNED, self::STATUS_NEEDS_REPROCESSING]);
+    }
+
+    public function canBeUnpacked(): bool
+    {
+        return $this->status === self::STATUS_READY;
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expiry_at !== null && $this->expiry_at->isPast();
+    }
+
+    public function expiresWithinDays(int $days): bool
+    {
+        return $this->expiry_at !== null
+            && ! $this->isExpired()
+            && $this->expiry_at->lte(now()->addDays($days));
+    }
+
+    // Steril & masih berlaku → boleh didistribusikan.
+    public function isDistributable(): bool
+    {
+        return $this->status === self::STATUS_STERILE && ! $this->isExpired();
     }
 }

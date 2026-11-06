@@ -7,13 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 class SterilizationBatchItem extends Model
 {
     const RESULT_PENDING = 'PENDING';
-    const RESULT_PASSED  = 'PASSED';
-    const RESULT_FAILED  = 'FAILED';
+
+    const RESULT_PASSED = 'PASSED';
+
+    const RESULT_FAILED = 'FAILED';
+
+    const CI_PASS = 'PASS';
+
+    const CI_FAIL = 'FAIL';
 
     protected $fillable = [
         'batch_id',
         'tray_id',
         'result',
+        'ci_result',
         'failure_notes',
     ];
 

@@ -35,6 +35,19 @@
                 </a>
             @endcan
         @endif
+
+        @if ($sterilizationBatch->status === \App\Models\SterilizationBatch::STATUS_COMPLETED)
+            @can('sterilization-batches.view')
+                <a href="{{ route('sterilization-batches.labels', $sterilizationBatch) }}" target="_blank"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a1 1 0 001-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Cetak Label Semua Tray
+                </a>
+            @endcan
+        @endif
     </x-slot>
 
     @php $statusInfo = \App\Models\SterilizationBatch::STATUSES[$sterilizationBatch->status] ?? ['label' => $sterilizationBatch->status, 'color' => 'gray']; @endphp
@@ -49,12 +62,23 @@
                     <h3 class="text-sm font-bold text-gray-900">Informasi Batch</h3>
                 </div>
                 <div class="divide-y divide-gray-50">
-                    @foreach ([['label' => 'Nomor Batch', 'value' => $sterilizationBatch->batch_number], ['label' => 'Sterilizer', 'value' => $sterilizationBatch->sterilizer->name . ' (' . $sterilizationBatch->sterilizer->type . ')'], ['label' => 'Operator', 'value' => $sterilizationBatch->operator->name], ['label' => 'Rumah Sakit', 'value' => $sterilizationBatch->hospital->name], ['label' => 'Waktu Mulai', 'value' => $sterilizationBatch->started_at?->format('d M Y, H:i') ?? '-'], ['label' => 'Waktu Selesai', 'value' => $sterilizationBatch->completed_at?->format('d M Y, H:i') ?? '-']] as $item)
+                    @foreach ([['label' => 'Nomor Batch', 'value' => $sterilizationBatch->batch_number], ['label' => 'Nomor Load', 'value' => $sterilizationBatch->load_number ?? '-'], ['label' => 'Sterilizer', 'value' => $sterilizationBatch->sterilizer->name . ' (' . $sterilizationBatch->sterilizer->type . ')'], ['label' => 'Operator', 'value' => $sterilizationBatch->operator->name], ['label' => 'Rumah Sakit', 'value' => $sterilizationBatch->hospital->name], ['label' => 'Waktu Mulai', 'value' => $sterilizationBatch->started_at?->format('d M Y, H:i') ?? '-'], ['label' => 'Waktu Selesai', 'value' => $sterilizationBatch->completed_at?->format('d M Y, H:i') ?? '-']] as $item)
                         <div class="flex items-start justify-between px-5 py-3">
                             <span class="w-36 shrink-0 text-xs text-gray-400">{{ $item['label'] }}</span>
                             <span class="text-right text-sm font-medium text-gray-700">{{ $item['value'] }}</span>
                         </div>
                     @endforeach
+                    <div class="flex items-center justify-between px-5 py-3">
+                        <span class="text-xs text-gray-400">Indikator Biologis (BI)</span>
+                        <x-badge :color="$sterilizationBatch->bi_color" dot>{{ $sterilizationBatch->bi_label }}</x-badge>
+                    </div>
+                    @if ($sterilizationBatch->bowie_dick_result)
+                        @php $bd = \App\Models\SterilizationBatch::BOWIE_DICK[$sterilizationBatch->bowie_dick_result] ?? ['label' => '-', 'color' => 'gray']; @endphp
+                        <div class="flex items-center justify-between px-5 py-3">
+                            <span class="text-xs text-gray-400">Uji Bowie-Dick</span>
+                            <x-badge :color="$bd['color']" dot>{{ $bd['label'] }}</x-badge>
+                        </div>
+                    @endif
                     <div class="flex items-center justify-between px-5 py-3">
                         <span class="text-xs text-gray-400">Status</span>
                         <x-badge :color="$statusInfo['color']" dot>{{ $statusInfo['label'] }}</x-badge>
@@ -101,21 +125,32 @@
 
                         <div class="p-5 space-y-3">
 
+                            {{-- Indikator Biologis (BI) — tingkat load --}}
+                            <div class="mb-4 rounded-lg border border-purple-100 bg-purple-50 p-3">
+                                <label
+                                    class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-purple-600">
+                                    Indikator Biologis (BI) — uji spora seluruh load
+                                </label>
+                                <select name="bi_result"
+                                    class="w-full rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm text-gray-900 transition
+                                              focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/20">
+                                    @foreach (\App\Models\SterilizationBatch::BI_RESULTS as $key => $info)
+                                        <option value="{{ $key }}"
+                                            @selected(old('bi_result', $sterilizationBatch->bi_result) === $key)>{{ $info['label'] }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-[10px] text-purple-500">BI Positif = uji spora tumbuh → seluruh
+                                    tray tidak boleh diluluskan.</p>
+                            </div>
+
                             {{-- Pilih Rak untuk tray yang PASSED --}}
                             <div class="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-3">
                                 <label
                                     class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-blue-600">
                                     Simpan ke Rak (untuk tray yang LULUS)
                                 </label>
-                                <select name="rack_id"
-                                    class="w-full rounded-lg border border-blue-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 transition
-                                               focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                                    <option value="">Tidak langsung disimpan ke rak</option>
-                                    @foreach ($racks as $rack)
-                                        <option value="{{ $rack->id }}">{{ $rack->name }} —
-                                            {{ $rack->location_desc }}</option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select name="rack_id" placeholder="Tidak langsung disimpan ke rak"
+                                    :options="$racks->map(fn ($r) => ['id' => (string) $r->id, 'label' => $r->name . ' — ' . $r->location_desc])->values()" />
                             </div>
 
                             @foreach ($sterilizationBatch->items as $i => $batchItem)
@@ -165,6 +200,21 @@
                                         </label>
                                     </div>
 
+                                    <div class="mt-2 flex items-center gap-2">
+                                        <label
+                                            class="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                                            Indikator Kimia (CI)
+                                        </label>
+                                        <select name="results[{{ $i }}][ci_result]"
+                                            class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-900 transition
+                                                      focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20">
+                                            <option value="">— belum dibaca —</option>
+                                            <option value="PASS" @selected($batchItem->ci_result === 'PASS')>Lulus</option>
+                                            <option value="FAIL" @selected($batchItem->ci_result === 'FAIL')>Gagal</option>
+                                        </select>
+                                        <span class="text-[10px] text-gray-400">wajib Lulus untuk meluluskan tray</span>
+                                    </div>
+
                                     <div x-show="result === 'FAILED'" x-cloak class="mt-2">
                                         <input type="text" name="results[{{ $i }}][failure_notes]"
                                             value="{{ $batchItem->failure_notes }}"
@@ -193,6 +243,12 @@
                                 <div>
                                     <div class="text-sm font-medium text-gray-900">{{ $batchItem->tray->name }}</div>
                                     <div class="text-xs text-gray-400">{{ $batchItem->tray->code }}</div>
+                                    @if ($batchItem->ci_result)
+                                        <div class="mt-0.5 text-[10px] text-gray-400">CI:
+                                            <span class="{{ $batchItem->ci_result === 'PASS' ? 'text-green-600' : 'text-red-500' }} font-semibold">
+                                                {{ $batchItem->ci_result === 'PASS' ? 'Lulus' : 'Gagal' }}</span>
+                                        </div>
+                                    @endif
                                     @if ($batchItem->failure_notes)
                                         <div class="mt-0.5 text-xs text-red-500">{{ $batchItem->failure_notes }}</div>
                                     @endif
@@ -239,7 +295,7 @@
                     @endforelse
                 </div>
 
-                @can('sterilization-batches.edit')
+                @can('consumable-movements.create')
                     <div class="border-t border-gray-50 p-4">
                         <button type="button" @click="open = !open"
                             class="flex items-center gap-1.5 text-sm font-medium text-primary-500 transition hover:text-primary-600">
@@ -257,17 +313,10 @@
                             <input type="hidden" name="usageable_id" value="{{ $sterilizationBatch->id }}" />
 
                             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                <select name="consumable_id"
-                                    class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 transition
-                                           focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                                    <option value="">Pilih consumable...</option>
-                                    @foreach ($consumables as $c)
-                                        <option value="{{ $c->id }}"
-                                            {{ old('consumable_id') == $c->id ? 'selected' : '' }}>
-                                            {{ $c->name }} ({{ $c->current_stock }} {{ $c->unit }} tersedia)
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select name="consumable_id" placeholder="Pilih consumable..."
+                                    searchPlaceholder="Cari consumable..." emptyText="Consumable tidak ditemukan"
+                                    :options="$consumables->map(fn ($c) => ['id' => (string) $c->id, 'label' => $c->name . ' (' . $c->current_stock . ' ' . $c->unit . ' tersedia)'])->values()"
+                                    :selected="old('consumable_id')" />
                                 <input type="number" name="quantity" min="1" value="{{ old('quantity', 1) }}"
                                     placeholder="Jumlah"
                                     class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 transition

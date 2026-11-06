@@ -22,14 +22,18 @@
     <x-slot name="pageSubHeader">Rakit tray baru dari template atau bebas</x-slot>
 
     @php
-        $instrumentOptions = $instrumentOptions ?? '[]';
-        $templateOptions = $templateOptions ?? '[]';
+        $instrumentOptions = $instrumentOptions ?? collect();
+        $templateOptions = $templateOptions ?? collect();
+        $consumableOptions = $consumables->map(fn ($c) => [
+            'id'    => (string) $c->id,
+            'label' => $c->name . ' (' . $c->current_stock . ' ' . $c->unit . ' tersedia)',
+        ])->values();
     @endphp
 
     <form method="POST" action="{{ route('trays.store') }}" x-data="{
         useTemplate: false,
         selectedTemplate: null,
-        templates: {{ $templateOptions }},
+        templates: @js($templateOptions),
         items: [{ instrument_item_id: '', notes: '' }],
         addItem() {
             this.items.push({ instrument_item_id: '', notes: '' });
@@ -70,18 +74,10 @@
                                 Rumah Sakit <span class="text-red-500">*</span>
                             </label>
                             @if ($userHospitals->count() > 1)
-                                <select name="hospital_id"
-                                    class="w-full rounded-lg border bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
-                                               focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20
-                                               {{ $errors->has('hospital_id') ? 'border-red-400' : 'border-gray-200' }}">
-                                    <option value="">Pilih Rumah Sakit</option>
-                                    @foreach ($userHospitals as $hospital)
-                                        <option value="{{ $hospital->id }}"
-                                            {{ old('hospital_id', session('active_hospital_id')) == $hospital->id ? 'selected' : '' }}>
-                                            {{ $hospital->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select name="hospital_id" placeholder="Pilih Rumah Sakit"
+                                    :options="$userHospitals->map(fn ($h) => ['id' => (string) $h->id, 'label' => $h->name])->values()"
+                                    :selected="old('hospital_id', session('active_hospital_id'))"
+                                    :error="$errors->has('hospital_id')" />
                             @else
                                 <input type="hidden" name="hospital_id" value="{{ $userHospitals->first()->id }}" />
                                 <input type="text" value="{{ $userHospitals->first()->name }}" disabled
@@ -123,39 +119,15 @@
                             @enderror
                         </div>
 
-                        {{-- Barcode --}}
-                        <div>
-                            <label
-                                class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
-                                Barcode
-                            </label>
-                            <input type="text" name="barcode" value="{{ old('barcode') }}"
-                                placeholder="cth. BC-TRY-001"
-                                class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-300 transition
-                                          focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20
-                                          {{ $errors->has('barcode') ? 'border-red-400' : '' }}" />
-                            @error('barcode')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-
                         {{-- Template (opsional) --}}
                         <div class="sm:col-span-2">
                             <label
                                 class="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                 Template (Opsional)
                             </label>
-                            <select name="template_id" @change="loadTemplate($event.target.value)"
-                                class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 transition
-                                           focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                                <option value="">Tanpa Template (Tray Bebas)</option>
-                                @foreach ($templates as $template)
-                                    <option value="{{ $template->id }}"
-                                        {{ old('template_id') == $template->id ? 'selected' : '' }}>
-                                        {{ $template->code }} — {{ $template->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select name="template_id" placeholder="Tanpa Template (Tray Bebas)"
+                                :options="$templates->map(fn ($t) => ['id' => (string) $t->id, 'label' => $t->code . ' — ' . $t->name])->values()"
+                                :selected="old('template_id')" onChange="loadTemplate(option.id)" />
                             <p class="mt-1 text-[10px] text-gray-400">Pilih template sebagai referensi isi tray. Isi
                                 tray tetap bisa diubah.</p>
 
@@ -211,92 +183,10 @@
                             <div class="mb-2 flex items-start gap-3">
 
                                 {{-- Searchable dropdown instrumen --}}
-                                <div class="relative flex-1" x-data="{
-                                    open: false,
-                                    search: '',
-                                    options: {{ $instrumentOptions }},
-                                    get filtered() {
-                                        if (!this.search) return this.options;
-                                        const s = this.search.toLowerCase();
-                                        return this.options.filter(o => o.label.toLowerCase().includes(s));
-                                    },
-                                    get selectedLabel() {
-                                        const found = this.options.find(o => o.id === item.instrument_item_id);
-                                        return found ? found.label : '';
-                                    },
-                                    pos: { top: 0, left: 0, width: 0 },
-                                    toggle(btn) {
-                                        if (this.open) { this.open = false; return; }
-                                        const rect = btn.getBoundingClientRect();
-                                        this.pos = { top: rect.bottom + 4, left: rect.left, width: rect.width };
-                                        this.open = true;
-                                        this.$nextTick(() => {
-                                            const input = document.getElementById('ins-search-' + index);
-                                            if (input) input.focus();
-                                        });
-                                    },
-                                    choose(option) {
-                                        item.instrument_item_id = option.id;
-                                        this.open = false;
-                                        this.search = '';
-                                    }
-                                }" @click.outside="open = false"
-                                    x-init="const closeOnScroll = () => { if (open) open = false; };
-                                    const mainEl = document.querySelector('main');
-                                    if (mainEl) mainEl.addEventListener('scroll', closeOnScroll, { passive: true });">
-                                    <input type="hidden" :name="'items[' + index + '][instrument_item_id]'"
-                                        :value="item.instrument_item_id" />
-                                    <button type="button" @click="toggle($el)"
-                                        class="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm transition
-                                                   hover:border-gray-300 focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20"
-                                        :class="item.instrument_item_id ? 'text-gray-900' : 'text-gray-400'">
-                                        <span class="truncate text-xs"
-                                            x-text="item.instrument_item_id ? selectedLabel : 'Pilih item instrumen...'"></span>
-                                        <svg class="ml-2 h-4 w-4 shrink-0 text-gray-400"
-                                            :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                                            stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
-                                    <template x-teleport="#dropdown-portal">
-                                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
-                                            x-transition:enter-start="opacity-0 scale-95"
-                                            x-transition:enter-end="opacity-100 scale-100"
-                                            :style="`position: fixed; top: ${pos.top}px; left: ${pos.left}px; width: ${pos.width}px; z-index: 9999;`"
-                                            class="rounded-xl border border-gray-200 bg-white shadow-lg"
-                                            style="display: none;" x-cloak>
-                                            <div class="border-b border-gray-50 p-2">
-                                                <div
-                                                    class="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                                                    <svg class="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none"
-                                                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                        <circle cx="11" cy="11" r="8" />
-                                                        <path stroke-linecap="round" d="m21 21-4.35-4.35" />
-                                                    </svg>
-                                                    <input type="text" x-model="search" :id="'ins-search-' + index"
-                                                        placeholder="Cari item instrumen..." @click.stop
-                                                        @keydown.escape="open = false"
-                                                        class="w-full border-none bg-transparent p-0 text-xs text-gray-600 placeholder-gray-300 focus:ring-0 focus:outline-none" />
-                                                </div>
-                                            </div>
-                                            <div class="max-h-48 overflow-y-auto py-1">
-                                                <template x-for="option in filtered" :key="option.id">
-                                                    <button type="button" @click="choose(option)"
-                                                        class="flex w-full items-center px-3 py-2 text-left text-xs transition hover:bg-gray-50"
-                                                        :class="item.instrument_item_id === option.id ?
-                                                            'bg-primary-50 text-primary-600 font-medium' :
-                                                            'text-gray-700'">
-                                                        <span x-text="option.label"></span>
-                                                    </button>
-                                                </template>
-                                                <div x-show="filtered.length === 0"
-                                                    class="px-3 py-4 text-center text-xs text-gray-400">
-                                                    Item tidak ditemukan
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
+                                <x-searchable-select class="flex-1" dynamicName="'items[' + index + '][instrument_item_id]'"
+                                    model="item.instrument_item_id" :options="$instrumentOptions"
+                                    placeholder="Pilih item instrumen..." searchPlaceholder="Cari item instrumen..."
+                                    emptyText="Item tidak ditemukan" />
 
                                 {{-- Notes per item --}}
                                 <input type="text" :name="'items[' + index + '][notes]'" x-model="item.notes"
@@ -369,16 +259,10 @@
 
                         <template x-for="(usage, index) in usages" :key="index">
                             <div class="mb-2 flex items-start gap-3">
-                                <select :name="'consumable_usages[' + index + '][consumable_id]'"
-                                    x-model="usage.consumable_id"
-                                    class="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 transition
-                                           focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-400/20">
-                                    <option value="">Pilih consumable...</option>
-                                    @foreach ($consumables as $c)
-                                        <option value="{{ $c->id }}">{{ $c->name }}
-                                            ({{ $c->current_stock }} {{ $c->unit }} tersedia)</option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select class="flex-1" dynamicName="'consumable_usages[' + index + '][consumable_id]'"
+                                    model="usage.consumable_id" :options="$consumableOptions"
+                                    placeholder="Pilih consumable..." searchPlaceholder="Cari consumable..."
+                                    emptyText="Consumable tidak ditemukan" />
                                 <input type="number" :name="'consumable_usages[' + index + '][quantity]'"
                                     x-model="usage.quantity" min="1"
                                     class="w-28 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-center text-sm text-gray-900 transition
